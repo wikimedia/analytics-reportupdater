@@ -1,0 +1,9 @@
+#!/usr/bin/env python
+
+import sys
+import random
+
+start_date = sys.argv[1]
+
+print 'date\tvalue'
+print start_date + '\t' + str(random.random())

@@ -1,0 +1,16 @@
+databases:
+    reportupdater_db:
+        host: "some.db.host"
+        port: 1234
+        creds_file: /creds/.my.cnf
+        db: some_db_name
+defaults:
+    db: reportupdater_db
+reports:
+    reportupdater_test4:
+        frequency: hours
+        granularity: days
+        starts: 2015-01-01
+        by_wiki: true
+        explode_by:
+            editor: "visualeditor, wikitext"
