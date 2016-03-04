@@ -123,10 +123,14 @@ class Writer(object):
             rows = [row for sublist in rows for row in sublist]  # flatten
         if len(report.explode_by) > 0:
             output_path = get_exploded_report_output_path(
-                self.config['output_folder'], report.explode_by, report.key)
+                output_folder, report.explode_by, report.key)
         else:
-            output_path = os.path.join(self.config['output_folder'], report.key + '.tsv')
+            output_path = os.path.join(output_folder, report.key + '.tsv')
         temp_output_path = output_path + '.tmp'
+
+        # Make sure the output directory exists
+        if not os.path.exists(output_folder):
+            os.makedirs(output_folder)
 
         try:
             # wb mode needed to avoid unicode conflict between io and csv
