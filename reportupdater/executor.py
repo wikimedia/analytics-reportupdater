@@ -30,7 +30,7 @@ class Executor(object):
 
     def run(self):
         for report in self.selector.run():
-            logging.debug('Executing "{report}"...'.format(report=str(report)))
+            logging.info('Executing "{report}"...'.format(report=str(report)))
             if report.type == 'sql':
                 if self.execute_sql_report(report):
                     yield report
