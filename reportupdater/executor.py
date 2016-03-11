@@ -9,6 +9,7 @@ import MySQLdb
 import logging
 import subprocess
 import csv
+import os
 from datetime import datetime, date
 from selector import Selector
 from collections import defaultdict
@@ -152,6 +153,10 @@ class Executor(object):
         for dimension in sorted(report.explode_by.keys()):
             value = report.explode_by[dimension]
             parameters.append(value)
+        # if a script optionally uses this last parameter
+        # it will be the absolute path to itself
+        # NOTE: wouldn't this be available to the script anyway?
+        parameters.append(os.path.dirname(report.script))
         # execute the script, store its output in a pipe
         try:
             process = subprocess.Popen(parameters, stdout=subprocess.PIPE)

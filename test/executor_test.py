@@ -37,6 +37,7 @@ class ExecutorTest(TestCase):
 
         self.report = Report()
         self.report.type = 'sql'
+        self.report.script = '/some/path'
         self.report.is_timeboxed = True
         self.report.start = datetime(2015, 1, 1)
         self.report.end = datetime(2015, 1, 2)
