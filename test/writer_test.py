@@ -224,8 +224,9 @@ class WriterTest(TestCase):
             'header': new_header,
             'data': {new_date : new_row}
         }
-        with self.assertRaises(ValueError):
-            self.writer.update_results(self.report)
+        header, updated_data = self.writer.update_results(self.report)
+        self.assertEqual(header, ['date', 'val1', 'val3', 'val2'])
+        self.assertEqual(updated_data[new_date], [datetime(2015, 1, 2), 1, 3, None])
 
 
     def test_update_results_when_header_has_different_number_of_columns(self):

@@ -67,17 +67,24 @@ class Writer(object):
             else:
                 raise ValueError('Previous results have no header')
 
-        # NOTE: this supports moving columns and adding columns
-        #       it will rewrite the old data accordingly
+        # New results may have a different header than previous results.
+        # They may contain new columns, column order changes, or removal
+        # of some columns. In the latter case, the previous data will be
+        # kept intact and the None value will be assigned to the missing
+        # columns of the new data.
         if header != previous_header:
-            old_columns = set(header).intersection(set(previous_header))
-            removed_columns = list(set(previous_header) - set(header))
-
-            # removed columns are not supported yet
+            # Fill in the values for removed columns.
+            removed_columns = sorted(list(set(previous_header) - set(header)))
             if removed_columns:
-                raise ValueError('Results header is missing ' + str(removed_columns))
+                header.extend(removed_columns)
+                new_data = report.results['data']
+                for date in new_data:
+                    rows = new_data[date] if report.is_funnel else [new_data[date]]
+                    for row in rows:
+                        row.extend([None] * len(removed_columns))
 
             # make a map to use when updating old rows to new rows
+            old_columns = set(header).intersection(set(previous_header))
             new_indexes = {
                 header.index(col): previous_header.index(col)
                 for col in old_columns
