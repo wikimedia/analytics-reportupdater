@@ -37,11 +37,9 @@ def run(**kwargs):
         write_pid_file(params)  # create lock to avoid concurrent executions
 
         current_exec_time = utcnow()
-        last_exec_time = replace_exec_time(current_exec_time, params['history_path'])
 
         config = load_config(params['config_path'])
         config['current_exec_time'] = current_exec_time
-        config['last_exec_time'] = last_exec_time
         config['query_folder'] = params['query_folder']
         config['output_folder'] = params['output_folder']
         config['wikis_path'] = params['wikis_path']
@@ -63,7 +61,6 @@ def get_params(passed_params):
     query_folder = passed_params.pop('query_folder', os.path.join(project_root, 'queries'))
     process_params = {
         'pid_file_path': os.path.join(query_folder, '.reportupdater.pid'),
-        'history_path': os.path.join(query_folder, '.reportupdater.history'),
         'config_path': os.path.join(query_folder, 'config.yaml'),
         'output_folder': os.path.join(project_root, 'output'),
         'wikis_path': os.path.join(project_root, 'wikis.txt'),
@@ -139,21 +136,6 @@ def delete_pid_file(params):
         os.remove(params['pid_file_path'])
     except OSError, e:
         logging.error('Unable to delete the pid file (' + str(e) + ').')
-
-
-def replace_exec_time(current_time, history_path):
-    # Writes the current execution time to the history file.
-    # If the file contains the last execution time, it is returned.
-    if os.path.exists(history_path):
-        with io.open(history_path) as history_file:
-            last_time_str = history_file.read().strip()
-            last_time = datetime.strptime(last_time_str, DATE_AND_TIME_FORMAT)
-    else:
-        last_time = None
-    with io.open(history_path, 'w') as history_file:
-        current_time_str = current_time.strftime(DATE_AND_TIME_FORMAT)
-        history_file.write(unicode(current_time_str))
-    return last_time
 
 
 def load_config(config_path):

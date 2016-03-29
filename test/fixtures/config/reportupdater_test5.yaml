@@ -1,7 +1,5 @@
 reports:
     reportupdater_test5:
-        frequency: days
         granularity: days
-        timeboxed: true
         starts: 2015-01-01
         type: script

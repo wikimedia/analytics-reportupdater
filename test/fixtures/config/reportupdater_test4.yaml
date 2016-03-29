@@ -8,7 +8,6 @@ defaults:
     db: reportupdater_db
 reports:
     reportupdater_test4:
-        frequency: hours
         granularity: days
         starts: 2015-01-01
         by_wiki: true

@@ -24,7 +24,6 @@ class ReportUpdaterTest(TestCase):
         self.query_folder = 'test/fixtures/queries'
         self.output_folder = 'test/fixtures/output'
         self.pid_file_path = 'test/fixtures/queries/.reportupdater.pid'
-        self.history_path = 'test/fixtures/reportupdater_test.history'
         self.paths_to_clean = [self.pid_file_path]
 
 
@@ -39,38 +38,6 @@ class ReportUpdaterTest(TestCase):
                     shutil.rmtree(path)
                 except:
                     pass
-
-
-    def test_when_current_exec_time_and_last_exec_time_are_within_the_same_hour(self):
-        last_exec_time = datetime(2015, 1, 2, 3, 4, 5)
-        self.write_time_to_history(last_exec_time)
-        reportupdater.utcnow = MagicMock(return_value=datetime(2015, 1, 2, 3, 40, 50))
-        reportupdater.run(
-            config_path=os.path.join(self.config_folder, 'reportupdater_test1.yaml'),
-            query_folder=self.query_folder,
-            output_folder=self.output_folder,
-            history_path=self.history_path
-        )
-        # The report should not be computed because it has already been computed
-        # within this hour. So the output file should not exist.
-        output_path = os.path.join(self.output_folder, 'reportupdater_test1.tsv')
-        self.assertFalse(os.path.exists(output_path))
-
-
-    def test_when_current_exec_time_and_last_exec_time_are_within_the_same_day(self):
-        last_exec_time = datetime(2015, 1, 2, 3, 4, 5)
-        self.write_time_to_history(last_exec_time)
-        reportupdater.utcnow = MagicMock(return_value=datetime(2015, 1, 2, 13, 14, 15))
-        reportupdater.run(
-            config_path=os.path.join(self.config_folder, 'reportupdater_test2.yaml'),
-            query_folder=self.query_folder,
-            output_folder=self.output_folder,
-            history_path=self.history_path
-        )
-        # The report should not be computed because it has already been computed
-        # within this day. So the output file should not exist.
-        output_path = os.path.join(self.output_folder, 'reportupdater_test2.tsv')
-        self.assertFalse(os.path.exists(output_path))
 
 
     def test_when_two_threads_run_reportupdater_in_parallel(self):
@@ -88,14 +55,12 @@ class ReportUpdaterTest(TestCase):
         MySQLdb.connect = MagicMock(wraps=connect_with_lag)
 
         # The first thread should execute normally and output the results.
-        history_path1 = 'test/fixtures/reportupdater_test1.history'
         output_path1 = os.path.join(self.output_folder, 'reportupdater_test1.tsv')
-        self.paths_to_clean.extend([history_path1, output_path1])
+        self.paths_to_clean.extend([output_path1])
         args1 = {
             'config_path': os.path.join(self.config_folder, 'reportupdater_test1.yaml'),
             'query_folder': self.query_folder,
-            'output_folder': self.output_folder,
-            'history_path': history_path1
+            'output_folder': self.output_folder
         }
         thread1 = Thread(target=reportupdater.run, kwargs=args1)
         thread1.start()
@@ -103,17 +68,13 @@ class ReportUpdaterTest(TestCase):
         # The second thread will start when the first thread is still running,
         # so it should be discarded by the pidfile control
         # and no output should be written.
-        # Note that the history file is different, so that
-        # the frequency control does not discard this thread.
         time.sleep(0.1)
-        history_path2 = 'test/fixtures/reportupdater_test2.history'
         output_path2 = os.path.join(self.output_folder, 'reportupdater_test2.tsv')
-        self.paths_to_clean.extend([history_path2, output_path2])
+        self.paths_to_clean.extend([output_path2])
         args2 = {
             'config_path': os.path.join(self.config_folder, 'reportupdater_test2.yaml'),
             'query_folder': self.query_folder,
-            'output_folder': self.output_folder,
-            'history_path': history_path2
+            'output_folder': self.output_folder
         }
         thread2 = Thread(target=reportupdater.run, kwargs=args2)
         thread2.start()
@@ -127,7 +88,7 @@ class ReportUpdaterTest(TestCase):
         self.assertFalse(os.path.exists(output_path2))
 
 
-    def test_hourly_timeboxed_report_without_previous_results(self):
+    def test_hourly_report_without_previous_results(self):
         def fetchall_callback():
             # This method will return a subsequent row with each call.
             try:
@@ -145,13 +106,11 @@ class ReportUpdaterTest(TestCase):
 
         config_path = os.path.join(self.config_folder, 'reportupdater_test1.yaml')
         output_path = os.path.join(self.output_folder, 'reportupdater_test1.tsv')
-        history_path = 'test/fixtures/reportupdater_test1.history'
-        self.paths_to_clean.extend([output_path, history_path])
+        self.paths_to_clean.extend([output_path])
         reportupdater.run(
             config_path=config_path,
             query_folder=self.query_folder,
-            output_folder=self.output_folder,
-            history_path=history_path
+            output_folder=self.output_folder
         )
         self.assertTrue(os.path.exists(output_path))
         with io.open(output_path, 'r', encoding='utf-8') as output_file:
@@ -169,7 +128,7 @@ class ReportUpdaterTest(TestCase):
             expected_value += 1
 
 
-    def test_hourly_funnel_timeboxed_report_without_previous_results(self):
+    def test_hourly_funnel_report_without_previous_results(self):
         def fetchall_callback():
             # This method will return a subsequent row with each call.
             try:
@@ -188,13 +147,11 @@ class ReportUpdaterTest(TestCase):
 
         config_path = os.path.join(self.config_folder, 'reportupdater_test3.yaml')
         output_path = os.path.join(self.output_folder, 'reportupdater_test3.tsv')
-        history_path = 'test/fixtures/reportupdater_test3.history'
-        self.paths_to_clean.extend([output_path, history_path])
+        self.paths_to_clean.extend([output_path])
         reportupdater.run(
             config_path=config_path,
             query_folder=self.query_folder,
-            output_folder=self.output_folder,
-            history_path=history_path
+            output_folder=self.output_folder
         )
         self.assertTrue(os.path.exists(output_path))
         with io.open(output_path, 'r', encoding='utf-8') as output_file:
@@ -215,7 +172,7 @@ class ReportUpdaterTest(TestCase):
                 expected_value = 1
 
 
-    def test_daily_timeboxed_report_with_previous_results(self):
+    def test_daily_report_with_previous_results(self):
         def fetchall_callback():
             # This method will return a subsequent row with each call.
             try:
@@ -234,15 +191,13 @@ class ReportUpdaterTest(TestCase):
 
         config_path = os.path.join(self.config_folder, 'reportupdater_test2.yaml')
         output_path = os.path.join(self.output_folder, 'reportupdater_test2.tsv')
-        history_path = 'test/fixtures/reportupdater_test2.history'
         with io.open(output_path, 'w') as output_file:
             output_file.write(unicode('date\tvalue\n2015-01-01\t1\n2015-02-01\t2\n'))
-        self.paths_to_clean.extend([output_path, history_path])
+        self.paths_to_clean.extend([output_path])
         reportupdater.run(
             config_path=config_path,
             query_folder=self.query_folder,
-            output_folder=self.output_folder,
-            history_path=history_path
+            output_folder=self.output_folder
         )
         self.assertTrue(os.path.exists(output_path))
         with io.open(output_path, 'r', encoding='utf-8') as output_file:
@@ -260,7 +215,7 @@ class ReportUpdaterTest(TestCase):
             expected_value += 1
 
 
-    def test_daily_not_timeboxed_report_without_previous_results_with_explode_by(self):
+    def test_daily_report_without_previous_results_with_explode_by(self):
         def fetchall_callback():
             return [[datetime(2015, 1, 1), str(1)]]
         header = ['date', 'value']
@@ -268,18 +223,16 @@ class ReportUpdaterTest(TestCase):
         MySQLdb.connect = MagicMock(return_value=connection_mock)
 
         config_path = os.path.join(self.config_folder, 'reportupdater_test4.yaml')
-        history_path = 'test/fixtures/reportupdater_test4.history'
         wikis_path = 'test/fixtures/wikis.txt'
         reportupdater.run(
             config_path=config_path,
             query_folder=self.query_folder,
             output_folder=self.output_folder,
-            history_path=history_path,
             wikis_path=wikis_path
         )
 
         output_folder = os.path.join(self.output_folder, 'reportupdater_test4')
-        self.paths_to_clean.extend([output_folder, history_path])
+        self.paths_to_clean.extend([output_folder])
 
         output_filenames = [
             'visualeditor/wiki1.tsv',
@@ -301,17 +254,15 @@ class ReportUpdaterTest(TestCase):
             self.assertEqual(output_lines[1], '2015-01-01\t1\n')
 
 
-    def test_daily_timeboxed_script_report_without_previous_results(self):
+    def test_daily_script_report_without_previous_results(self):
         config_path = os.path.join(self.config_folder, 'reportupdater_test5.yaml')
-        history_path = 'test/fixtures/reportupdater_test5.history'
         reportupdater.run(
             config_path=config_path,
             query_folder=self.query_folder,
-            output_folder=self.output_folder,
-            history_path=history_path
+            output_folder=self.output_folder
         )
         output_path = os.path.join(self.output_folder, 'reportupdater_test5.tsv')
-        self.paths_to_clean.extend([output_path, history_path])
+        self.paths_to_clean.extend([output_path])
 
         self.assertTrue(os.path.exists(output_path))
         with io.open(output_path, 'r', encoding='utf-8') as output_file:
@@ -327,10 +278,3 @@ class ReportUpdaterTest(TestCase):
             self.assertEqual(date_str, expected_date_str)
             self.assertEqual(type(value), unicode)
             expected_date += relativedelta(days=+1)
-
-
-    def write_time_to_history(self, last_exec_time):
-        last_exec_time_str = last_exec_time.strftime(DATE_AND_TIME_FORMAT)
-        with io.open(self.history_path, 'w') as history_file:
-            history_file.write(unicode(last_exec_time_str))
-        self.paths_to_clean.append(self.history_path)

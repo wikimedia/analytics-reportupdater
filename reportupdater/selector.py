@@ -4,7 +4,7 @@
 #   1. The time that has passed sinnce the last execution
 #   2. If the report data is up to date or not
 #
-# It also divides timeboxed reports in intervals of one time unit.
+# It also divides reports in intervals of one time unit.
 # For example, if the report in question has a monthly granularity,
 # divides a 3-month report into 3 1-month reports.
 
@@ -32,38 +32,20 @@ class Selector(object):
     def run(self):
         if 'current_exec_time' not in self.config:
             raise_critical(KeyError, 'Current exec time is not in config.')
-        if 'last_exec_time' not in self.config:
-            raise_critical(KeyError, 'Last exec time is not in config.')
         now = self.config['current_exec_time']
-        last_exec_time = self.config['last_exec_time']
         if not isinstance(now, datetime):
             raise_critical(ValueError, 'Current exec time is not a date.')
-        if last_exec_time and last_exec_time > now:
-            raise_critical(ValueError, 'Last exec time is greater than current exec time.')
 
         for report in self.reader.run():
             logging.debug('Triaging "{report}"...'.format(report=str(report)))
             try:
-                if self.is_time_to_execute(last_exec_time, now, report.frequency):
-                    for exploded_report in self.explode(report):
-                        if report.is_timeboxed:
-                            for interval_report in self.get_interval_reports(exploded_report, now):
-                                yield interval_report
-                        else:
-                            yield exploded_report
+                for exploded_report in self.explode(report):
+                    for interval_report in self.get_interval_reports(exploded_report, now):
+                        yield interval_report
             except Exception, e:
                 message = ('Report "{report_key}" could not be triaged for execution '
                            'because of error: {error}')
                 logging.error(message.format(report_key=report.key, error=str(e)))
-
-
-    def is_time_to_execute(self, last_exec_time, now, frequency):
-        if last_exec_time:
-            t1 = self.truncate_date(last_exec_time, frequency)
-        else:
-            t1 = None
-        t2 = self.truncate_date(now, frequency)
-        return t1 != t2
 
 
     def get_interval_reports(self, report, now):
@@ -74,16 +56,15 @@ class Selector(object):
             raise ValueError('Output folder is not a string.')
 
         first_date = self.truncate_date(report.first_date, report.granularity)
-        frequency_increment = self.get_increment(report.frequency)
         lag_increment = relativedelta(seconds=report.lag)
         granularity_increment = self.get_increment(report.granularity)
-        relative_now = now - frequency_increment - lag_increment
+        relative_now = now - lag_increment - granularity_increment
         last_date = self.truncate_date(relative_now, report.granularity)
         previous_results = get_previous_results(report, output_folder)
         already_done_dates = previous_results['data'].keys()
 
         for start in self.get_all_start_dates(first_date, last_date, granularity_increment):
-            if start == last_date or start not in already_done_dates:
+            if start not in already_done_dates:
                 report_copy = deepcopy(report)
                 report_copy.start = start
                 report_copy.end = start + granularity_increment

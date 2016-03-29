@@ -38,7 +38,6 @@ class ExecutorTest(TestCase):
         self.report = Report()
         self.report.type = 'sql'
         self.report.script = '/some/path'
-        self.report.is_timeboxed = True
         self.report.start = datetime(2015, 1, 1)
         self.report.end = datetime(2015, 1, 2)
         self.report.db_key = self.db_key
@@ -47,13 +46,13 @@ class ExecutorTest(TestCase):
                                     'AND date < {to_timestamp};')
 
 
-    def test_instantiate_sql_when_report_is_timeboxed_and_format_raises_error(self):
+    def test_instantiate_sql_when_format_raises_error(self):
         self.report.sql_template = 'SOME sql WITH AN {unknown} placeholder;'
         with self.assertRaises(ValueError):
             self.executor.instantiate_sql(self.report)
 
 
-    def test_instantiate_sql_when_report_is_timeboxed(self):
+    def test_instantiate_sql(self):
         result = self.executor.instantiate_sql(self.report)
         expected = self.report.sql_template.format(
             from_timestamp=self.report.start.strftime(TIMESTAMP_FORMAT),
@@ -62,15 +61,7 @@ class ExecutorTest(TestCase):
         self.assertEqual(result, expected)
 
 
-    def test_instantiate_sql_when_report_is_not_timeboxed(self):
-        self.report.is_timeboxed = False
-        self.report.sql_template = 'SOME sql CODE;'
-        sql_query = self.executor.instantiate_sql(self.report)
-        self.assertEqual(sql_query, self.report.sql_template)
-
-
     def test_instantiate_sql_when_exploded_by_wiki(self):
-        self.report.is_timeboxed = False
         self.report.explode_by = {'wiki': 'wiki'}
         self.report.sql_template = 'SOME sql WITH "{wiki}";'
         sql_query = self.executor.instantiate_sql(self.report)

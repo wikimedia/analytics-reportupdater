@@ -8,8 +8,6 @@ defaults:
     db: reportupdater_db
 reports:
     reportupdater_test3:
-        frequency: hours
         granularity: days
-        timeboxed: true
         funnel: true
         starts: 2015-01-01

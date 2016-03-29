@@ -8,7 +8,5 @@ defaults:
     db: reportupdater_db
 reports:
     reportupdater_test1:
-        frequency: hours
         granularity: days
-        timeboxed: true
         starts: 2015-01-01

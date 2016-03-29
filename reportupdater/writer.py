@@ -2,9 +2,6 @@
 # This module is the last step of the pipeline.
 # It gets the results passed from the executor,
 # and updates the report's corresponding file.
-#
-# In the case of timeboxed reports, it handles the
-# update of previous results consistently.
 
 
 import os

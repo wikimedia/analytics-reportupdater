@@ -61,10 +61,10 @@ class Executor(object):
 
 
     def instantiate_sql(self, report):
-        values = {}
-        if report.is_timeboxed:
-            values['from_timestamp'] = report.start.strftime(TIMESTAMP_FORMAT)
-            values['to_timestamp'] = report.end.strftime(TIMESTAMP_FORMAT)
+        values = {
+            'from_timestamp': report.start.strftime(TIMESTAMP_FORMAT),
+            'to_timestamp': report.end.strftime(TIMESTAMP_FORMAT)
+        }
         values.update(report.explode_by)
         try:
             return report.sql_template.format(**values)

@@ -15,8 +15,6 @@ class ReaderTest(TestCase):
         self.report_key = 'reader_test'
         self.report_config = {
             'starts': '2015-01-01',
-            'timeboxed': True,
-            'frequency': 'hours',
             'granularity': 'days'
         }
         self.config = {
@@ -51,30 +49,21 @@ class ReaderTest(TestCase):
         self.assertEqual(result, 'script')
 
 
-    def test_get_frequency_and_granularity_when_value_is_not_in_config(self):
+    def test_get_granularity_when_value_is_not_in_config(self):
         report_config = {}
-        with self.assertRaises(KeyError):
-            self.reader.get_frequency(report_config)
         with self.assertRaises(KeyError):
             self.reader.get_granularity(report_config)
 
 
-    def test_get_frequency_and_granularity_when_value_is_not_valid(self):
+    def test_get_granularity_when_value_is_not_valid(self):
         report_config = {
-            'frequency': 'wrong',
             'granularity': 'wrong'
         }
         with self.assertRaises(ValueError):
-            self.reader.get_frequency(report_config)
-        with self.assertRaises(ValueError):
             self.reader.get_granularity(report_config)
 
 
-    def test_get_frequency_and_granularity(self):
-        for frequency in ['hours', 'days', 'weeks', 'months']:
-            report_config = {'frequency': frequency}
-            result = self.reader.get_frequency(report_config)
-            self.assertEqual(result, frequency)
+    def test_get_granularity(self):
         for granularity in ['days', 'weeks', 'months']:
             report_config = {'granularity': granularity}
             result = self.reader.get_granularity(report_config)
@@ -102,25 +91,6 @@ class ReaderTest(TestCase):
         self.assertEqual(result, 10)
 
 
-    def test_get_is_timeboxed_when_report_timeboxed_is_not_in_config(self):
-        report_config = {}
-        is_timeboxed = self.reader.get_is_timeboxed(report_config)
-        self.assertFalse(is_timeboxed)
-
-
-    def test_get_is_timeboxed_when_report_timeboxed_is_not_true(self):
-        for value in [False, None, 0]:
-            report_config = {'timeboxed': value}
-            is_timeboxed = self.reader.get_is_timeboxed(report_config)
-            self.assertFalse(is_timeboxed)
-
-
-    def test_get_is_timeboxed_when_report_timeboxed_is_true(self):
-        report_config = {'timeboxed': True}
-        is_timeboxed = self.reader.get_is_timeboxed(report_config)
-        self.assertTrue(is_timeboxed)
-
-
     def test_get_is_funnel_when_report_funnel_is_not_in_config(self):
         report_config = {}
         is_funnel = self.reader.get_is_funnel(report_config)
@@ -142,37 +112,26 @@ class ReaderTest(TestCase):
 
     def test_get_first_date_when_report_starts_is_not_a_string(self):
         report_config = {'starts': ('not', 'a', 'string')}
-        is_timeboxed = True
         with self.assertRaises(TypeError):
-            self.reader.get_first_date(report_config, is_timeboxed)
+            self.reader.get_first_date(report_config)
 
 
     def test_get_first_date_when_report_starts_does_not_match_date_format(self):
         report_config = {'starts': 'no match'}
-        is_timeboxed = True
         with self.assertRaises(ValueError):
-            self.reader.get_first_date(report_config, is_timeboxed)
-
-
-    def test_get_first_date_when_report_starts_is_not_in_timeboxed_config(self):
-        report_config = {}
-        is_timeboxed = True
-        with self.assertRaises(ValueError):
-            self.reader.get_first_date(report_config, is_timeboxed)
+            self.reader.get_first_date(report_config)
 
 
     def test_get_first_date_when_report_starts_is_not_in_config(self):
         report_config = {}
-        is_timeboxed = False
-        first_date = self.reader.get_first_date(report_config, is_timeboxed)
-        self.assertEqual(first_date, None)
+        with self.assertRaises(ValueError):
+            self.reader.get_first_date(report_config)
 
 
     def test_get_first_date(self):
         date_str = '2015-01-01'
         report_config = {'starts': date_str}
-        is_timeboxed = True
-        result = self.reader.get_first_date(report_config, is_timeboxed)
+        result = self.reader.get_first_date(report_config)
         expected = datetime.strptime(date_str, DATE_FORMAT)
         self.assertEqual(result, expected)
 
@@ -309,9 +268,7 @@ class ReaderTest(TestCase):
     def test_create_sql_report(self):
         self.reader.get_type = MagicMock(return_value='sql')
         self.reader.get_first_date = MagicMock(return_value='first_date')
-        self.reader.get_frequency = MagicMock(return_value='frequency')
         self.reader.get_granularity = MagicMock(return_value='granularity')
-        self.reader.get_is_timeboxed = MagicMock(return_value='is_timeboxed')
         self.reader.get_is_funnel = MagicMock(return_value='is_funnel')
         self.reader.get_db_key = MagicMock(return_value='db_key')
         self.reader.get_sql_template = MagicMock(return_value='sql_template')
@@ -320,9 +277,7 @@ class ReaderTest(TestCase):
         self.assertEqual(report.key, self.report_key)
         self.assertEqual(report.type, 'sql')
         self.assertEqual(report.first_date, 'first_date')
-        self.assertEqual(report.frequency, 'frequency')
         self.assertEqual(report.granularity, 'granularity')
-        self.assertEqual(report.is_timeboxed, 'is_timeboxed')
         self.assertEqual(report.is_funnel, 'is_funnel')
         self.assertEqual(report.db_key, 'db_key')
         self.assertEqual(report.sql_template, 'sql_template')
@@ -336,9 +291,7 @@ class ReaderTest(TestCase):
     def test_create_script_report(self):
         self.reader.get_type = MagicMock(return_value='script')
         self.reader.get_first_date = MagicMock(return_value='first_date')
-        self.reader.get_frequency = MagicMock(return_value='frequency')
         self.reader.get_granularity = MagicMock(return_value='granularity')
-        self.reader.get_is_timeboxed = MagicMock(return_value='is_timeboxed')
         self.reader.get_is_funnel = MagicMock(return_value='is_funnel')
         self.reader.get_db_key = MagicMock(return_value='db_key')
         self.reader.get_sql_template = MagicMock(return_value='sql_template')
@@ -347,9 +300,7 @@ class ReaderTest(TestCase):
         self.assertEqual(report.key, self.report_key)
         self.assertEqual(report.type, 'script')
         self.assertEqual(report.first_date, 'first_date')
-        self.assertEqual(report.frequency, 'frequency')
         self.assertEqual(report.granularity, 'granularity')
-        self.assertEqual(report.is_timeboxed, 'is_timeboxed')
         self.assertEqual(report.is_funnel, 'is_funnel')
         self.assertEqual(report.db_key, None)
         self.assertEqual(report.sql_template, None)
