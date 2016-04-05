@@ -9,6 +9,7 @@ import csv
 import logging
 from datetime import datetime
 from collections import defaultdict
+from dateutil.relativedelta import relativedelta
 
 
 DATE_FORMAT = '%Y-%m-%d'
@@ -94,3 +95,16 @@ def get_exploded_report_output_path(output_folder, explode_by, report_key):
 def ensure_dir(dir_path):
     if not os.path.exists(dir_path):
         os.makedirs(dir_path)
+
+
+def get_increment(period):
+    if period == 'hours':
+        return relativedelta(hours=1)
+    elif period == 'days':
+        return relativedelta(days=1)
+    elif period == 'weeks':
+        return relativedelta(days=7)
+    elif period == 'months':
+        return relativedelta(months=1)
+    else:
+        raise ValueError('Period is not valid.')

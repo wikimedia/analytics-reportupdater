@@ -3,6 +3,7 @@ import os
 from reportupdater.selector import Selector
 from reportupdater.reader import Reader
 from reportupdater.report import Report
+from reportupdater.utils import get_increment
 from unittest import TestCase
 from mock import MagicMock
 from datetime import datetime
@@ -101,23 +102,23 @@ class SelectorTest(TestCase):
 
 
     def test_get_increment_when_period_is_days(self):
-        increment = self.selector.get_increment('days')
+        increment = get_increment('days')
         self.assertEqual(increment, relativedelta(days=1))
 
 
     def test_get_increment_when_period_is_weeks(self):
-        increment = self.selector.get_increment('weeks')
+        increment = get_increment('weeks')
         self.assertEqual(increment, relativedelta(days=7))
 
 
     def test_get_increment_when_period_is_months(self):
-        increment = self.selector.get_increment('months')
+        increment = get_increment('months')
         self.assertEqual(increment, relativedelta(months=1))
 
 
     def test_get_increment_when_period_is_invalid(self):
         with self.assertRaises(ValueError):
-            self.selector.get_increment('notvalid')
+            get_increment('notvalid')
 
 
     def test_get_all_start_dates_when_first_date_is_greater_than_current_date(self):

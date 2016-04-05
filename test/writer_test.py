@@ -262,6 +262,39 @@ class WriterTest(TestCase):
         self.assertEqual(updated_data[old_date], [old_date, '2', None, '1', '3', None])
 
 
+    def test_update_results_when_max_data_points_is_set(self):
+        # see setUp for the fake data written to this report output
+        self.report.key = 'writer_test_header_change'
+
+        new_date = datetime(2015, 1, 2)
+        new_row = [new_date, 1, 2, 3]
+        self.report.max_data_points = 1
+        self.report.granularity = 'days'
+        self.report.start = new_date
+        self.report.results = {
+            'header': ['date', 'val1', 'val2', 'val3'],  # no changes
+            'data': {new_date: new_row}
+        }
+        header, updated_data = self.writer.update_results(self.report)
+        self.assertEqual(len(updated_data), 1)
+        self.assertTrue(new_date in updated_data)
+        self.assertEqual(updated_data[new_date], new_row)
+
+
+    def test_get_date_threshold_when_max_data_points_is_not_specified(self):
+        date_threshold = self.writer.get_date_threshold(self.report)
+        self.assertEqual(date_threshold, None)
+
+
+    def test_get_date_threshold(self):
+        self.report.max_data_points = 3
+        self.report.start = datetime(2015, 1, 1)
+        self.report.granularity = 'days'
+        expected = datetime(2014, 12, 29)
+        result = self.writer.get_date_threshold(self.report)
+        self.assertEqual(result, expected)
+
+
     def test_run_when_helper_method_raises_error(self):
         executed = [self.report]
         self.writer.executor.run = MagicMock(return_value=executed)

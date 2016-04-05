@@ -247,6 +247,27 @@ class ReaderTest(TestCase):
         self.assertEqual(result, expected)
 
 
+    def test_get_max_data_points_when_not_in_config(self):
+        result = self.reader.get_max_data_points({})
+        self.assertEqual(result, None)
+
+
+    def test_get_max_data_points_not_an_int_or_not_positive(self):
+        report_config = {'max_data_points': 'not and int'}
+        with self.assertRaises(ValueError):
+            self.reader.get_max_data_points(report_config)
+        report_config = {'max_data_points': 0}
+        with self.assertRaises(ValueError):
+            self.reader.get_max_data_points(report_config)
+
+
+    def test_get_max_data_points(self):
+        max_data_points = 10
+        report_config = {'max_data_points': max_data_points}
+        result = self.reader.get_max_data_points(report_config)
+        self.assertEqual(result, max_data_points)
+
+
     def test_get_executable_when_not_in_config(self):
         result = self.reader.get_executable({})
         self.assertEqual(result, None)

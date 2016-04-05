@@ -14,7 +14,7 @@ from copy import deepcopy
 from datetime import datetime
 from dateutil.relativedelta import relativedelta
 from reader import Reader
-from utils import raise_critical, get_previous_results
+from utils import raise_critical, get_previous_results, get_increment
 
 
 class Selector(object):
@@ -57,7 +57,7 @@ class Selector(object):
 
         first_date = self.truncate_date(report.first_date, report.granularity)
         lag_increment = relativedelta(seconds=report.lag)
-        granularity_increment = self.get_increment(report.granularity)
+        granularity_increment = get_increment(report.granularity)
         relative_now = now - lag_increment - granularity_increment
         last_date = self.truncate_date(relative_now, report.granularity)
         previous_results = get_previous_results(report, output_folder)
@@ -83,19 +83,6 @@ class Selector(object):
             return self.truncate_date(date, 'days') - passed_weekdays
         elif period == 'months':
             return date.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
-        else:
-            raise ValueError('Period is not valid.')
-
-
-    def get_increment(self, period):
-        if period == 'hours':
-            return relativedelta(hours=1)
-        elif period == 'days':
-            return relativedelta(days=1)
-        elif period == 'weeks':
-            return relativedelta(days=7)
-        elif period == 'months':
-            return relativedelta(months=1)
         else:
             raise ValueError('Period is not valid.')
 

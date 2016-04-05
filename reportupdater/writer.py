@@ -8,9 +8,11 @@ import os
 import io
 import csv
 import logging
+from copy import copy, deepcopy
 from executor import Executor
 from utils import (raise_critical, get_previous_results,
-                   DATE_FORMAT, get_exploded_report_output_path)
+                   DATE_FORMAT, get_exploded_report_output_path,
+                   get_increment)
 
 
 class Writer(object):
@@ -51,73 +53,66 @@ class Writer(object):
 
 
     def update_results(self, report):
-        header = report.results['header']
+        # Get current results.
+        current_header = copy(report.results['header'])
+        current_data = deepcopy(report.results['data'])
+        for date in current_data:
+            rows = current_data[date] if report.is_funnel else [current_data[date]]
+            for row in rows:
+                if len(row) != len(current_header):
+                    raise ValueError('Results and header do not match.')
+
+        # Get previous results.
         previous_results = get_previous_results(report, self.get_output_folder())
         previous_header = previous_results['header']
-
-        updated_data = {}
-
-        # Handle the first run case
+        previous_data = previous_results['data']
         if not previous_header:
-            if not previous_results['data']:
-                previous_header = header
+            if not previous_data:
+                previous_header = current_header
             else:
-                raise ValueError('Previous results have no header')
+                raise ValueError('Previous results have no header.')
 
-        # New results may have a different header than previous results.
+        # Current results may have a different header than previous results.
         # They may contain new columns, column order changes, or removal
-        # of some columns. In the latter case, the previous data will be
-        # kept intact and the None value will be assigned to the missing
-        # columns of the new data.
-        if header != previous_header:
-            # Fill in the values for removed columns.
-            removed_columns = sorted(list(set(previous_header) - set(header)))
+        # of some columns.
+        if current_header != previous_header:
+
+            # Rewrite current header and data to include removed columns.
+            removed_columns = sorted(list(set(previous_header) - set(current_header)))
             if removed_columns:
-                header.extend(removed_columns)
-                new_data = report.results['data']
-                for date in new_data:
-                    rows = new_data[date] if report.is_funnel else [new_data[date]]
+                current_header.extend(removed_columns)
+                for date in current_data:
+                    rows = current_data[date] if report.is_funnel else [current_data[date]]
                     for row in rows:
                         row.extend([None] * len(removed_columns))
 
-            # make a map to use when updating old rows to new rows
-            old_columns = set(header).intersection(set(previous_header))
-            new_indexes = {
-                header.index(col): previous_header.index(col)
-                for col in old_columns
-            }
+            # Make a map to use when updating previous data column order.
+            column_map = [
+                (current_header.index(col), previous_header.index(col))
+                for col in set(current_header).intersection(set(previous_header))
+            ]
 
-            # rewrite previous results if there are new columns
-            for date, rows in previous_results['data'].items():
-                rows_with_nulls = []
-                iteratee = rows
-                if not report.is_funnel:
-                    iteratee = [rows]
-                for row in iteratee:
-                    updated_row = [None] * len(header)
-                    for new_index, old_index in new_indexes.items():
-                        updated_row[new_index] = row[old_index]
-
-                    if report.is_funnel:
-                        rows_with_nulls.append(updated_row)
-                    else:
-                        rows_with_nulls = updated_row
-
-                updated_data[date] = rows_with_nulls
-        else:
-            updated_data = previous_results['data']
-
-        for date, rows in report.results['data'].iteritems():
-            updated_data[date] = rows
-            if report.is_funnel:
+            # Rewrite previous data in the new order and including new columns.
+            for date in previous_data:
+                rows = previous_data[date] if report.is_funnel else [previous_data[date]]
+                rewritten_rows = []
                 for row in rows:
-                    if len(row) != len(header):
-                        raise ValueError('Results and Header do not match')
-            else:
-                if len(rows) != len(header):
-                    raise ValueError('Results and Header do not match')
+                    rewritten_row = [None] * len(current_header)
+                    for new_index, old_index in column_map:
+                        rewritten_row[new_index] = row[old_index]
+                    rewritten_rows.append(rewritten_row)
+                previous_data[date] = rewritten_rows if report.is_funnel else rewritten_rows[0]
 
-        return header, updated_data
+        # Build final updated data.
+        updated_header = current_header
+        updated_data = {}
+        date_threshold = self.get_date_threshold(report)
+        for date in previous_data:
+            if not date_threshold or date > date_threshold:
+                updated_data[date] = previous_data[date]
+        updated_data.update(current_data)
+
+        return updated_header, updated_data
 
 
     def write_results(self, header, data, report, output_folder):
@@ -151,3 +146,10 @@ class Writer(object):
             os.rename(temp_output_path, output_path)
         except Exception, e:
             raise RuntimeError('Could not rename the output file (' + str(e) + ').')
+
+
+    def get_date_threshold(self, report):
+        if not report.max_data_points:
+            return None
+        increment = get_increment(report.granularity)
+        return report.start - report.max_data_points * increment

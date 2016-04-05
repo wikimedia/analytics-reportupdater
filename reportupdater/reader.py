@@ -61,6 +61,7 @@ class Reader(object):
         report.is_funnel = self.get_is_funnel(report_config)
         report.first_date = self.get_first_date(report_config)
         report.explode_by = self.get_explode_by(report_config)
+        report.max_data_points = self.get_max_data_points(report_config)
         executable = self.get_executable(report_config) or report_key
         if report.type == 'sql':
             report.db_key = self.get_db_key(report_config)
@@ -152,6 +153,15 @@ class Reader(object):
                 values = [value.strip() for value in values_str.split(',')]
                 explode_by[placeholder] = values
         return explode_by
+
+
+    def get_max_data_points(self, report_config):
+        if 'max_data_points' not in report_config:
+            return None
+        max_data_points = report_config['max_data_points']
+        if type(max_data_points) != int or max_data_points < 1:
+            raise ValueError('Max data points is not valid.')
+        return max_data_points
 
 
     def get_executable(self, report_config):

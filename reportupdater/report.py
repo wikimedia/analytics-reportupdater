@@ -27,6 +27,7 @@ class Report(object):
         self.sql_template = None
         self.script = None
         self.explode_by = {}
+        self.max_data_points = None
         self.results = {'header': [], 'data': {}}
 
 
@@ -45,6 +46,7 @@ class Report(object):
             ' sql_template=' + self.format_sql(self.sql_template) +
             ' script=' + str(self.script) +
             ' explode_by=' + str(self.explode_by) +
+            ' max_data_points=' + str(self.max_data_points) +
             ' results=' + self.format_results(self.results) +
             '>'
         )
