@@ -61,11 +61,12 @@ class Reader(object):
         report.is_funnel = self.get_is_funnel(report_config)
         report.first_date = self.get_first_date(report_config)
         report.explode_by = self.get_explode_by(report_config)
+        executable = self.get_executable(report_config) or report_key
         if report.type == 'sql':
             report.db_key = self.get_db_key(report_config)
-            report.sql_template = self.get_sql_template(report_key, query_folder)
+            report.sql_template = self.get_sql_template(executable, query_folder)
         elif report.type == 'script':
-            report.script = self.get_script(report_key, query_folder)
+            report.script = self.get_script(executable, query_folder)
         return report
 
 
@@ -151,3 +152,12 @@ class Reader(object):
                 values = [value.strip() for value in values_str.split(',')]
                 explode_by[placeholder] = values
         return explode_by
+
+
+    def get_executable(self, report_config):
+        if 'execute' not in report_config:
+            return None
+        execute = report_config['execute']
+        if not isinstance(execute, str):
+            raise TypeError('Execute is not a string.')
+        return execute

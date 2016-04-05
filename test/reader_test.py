@@ -247,6 +247,24 @@ class ReaderTest(TestCase):
         self.assertEqual(result, expected)
 
 
+    def test_get_executable_when_not_in_config(self):
+        result = self.reader.get_executable({})
+        self.assertEqual(result, None)
+
+
+    def test_get_executable_when_execute_is_not_a_string(self):
+        report_config = {'execute': ('not', 'a', 'string')}
+        with self.assertRaises(TypeError):
+            self.reader.get_executable(report_config)
+
+
+    def test_get_executable(self):
+        execute = 'some identifier'
+        report_config = {'execute': execute}
+        result = self.reader.get_executable(report_config)
+        self.assertEqual(result, execute)
+
+
     def test_create_report_when_report_key_is_not_a_string(self):
         report_key = ('not', 'a', 'string')
         with self.assertRaises(TypeError):
@@ -263,6 +281,17 @@ class ReaderTest(TestCase):
         self.reader.get_first_date = MagicMock(side_effect=Exception())
         with self.assertRaises(Exception):
             self.reader.create_report(self.report_key, self.report_config)
+
+
+    def test_create_report_when_execute_is_given(self):
+        report_key = 'report_name'
+        executable = 'executable_name'
+        self.report_config['execute'] = executable
+        self.report_config['type'] = 'script'
+        expected = os.path.join(self.config['query_folder'], executable)
+        report = self.reader.create_report(report_key, self.report_config)
+        self.assertEqual(report.key, report_key)
+        self.assertEqual(report.script, expected)
 
 
     def test_create_sql_report(self):
