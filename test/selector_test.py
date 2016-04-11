@@ -121,6 +121,12 @@ class SelectorTest(TestCase):
             get_increment('notvalid')
 
 
+    def test_get_increment_when_times_is_set(self):
+        self.assertEqual(get_increment('days', 10), relativedelta(days=10))
+        self.assertEqual(get_increment('weeks', 3), relativedelta(days=21))
+        self.assertEqual(get_increment('months', 1), relativedelta(months=1))
+
+
     def test_get_all_start_dates_when_first_date_is_greater_than_current_date(self):
         first_date = datetime(2015, 1, 2)
         current_date = datetime(2015, 1, 1)

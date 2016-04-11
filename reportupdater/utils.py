@@ -97,14 +97,14 @@ def ensure_dir(dir_path):
         os.makedirs(dir_path)
 
 
-def get_increment(period):
+def get_increment(period, times=1):
     if period == 'hours':
-        return relativedelta(hours=1)
+        return relativedelta(hours=times)
     elif period == 'days':
-        return relativedelta(days=1)
+        return relativedelta(days=times)
     elif period == 'weeks':
-        return relativedelta(days=7)
+        return relativedelta(days=7 * times)
     elif period == 'months':
-        return relativedelta(months=1)
+        return relativedelta(months=times)
     else:
         raise ValueError('Period is not valid.')

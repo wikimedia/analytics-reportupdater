@@ -151,5 +151,7 @@ class Writer(object):
     def get_date_threshold(self, report):
         if not report.max_data_points:
             return None
-        increment = get_increment(report.granularity)
-        return report.start - report.max_data_points * increment
+        # Note that some older python-dateutil versions have
+        # problems when multiplying relativedelta instances.
+        increment = get_increment(report.granularity, report.max_data_points)
+        return report.start - increment
