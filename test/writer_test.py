@@ -282,16 +282,29 @@ class WriterTest(TestCase):
 
 
     def test_get_date_threshold_when_max_data_points_is_not_specified(self):
-        date_threshold = self.writer.get_date_threshold(self.report)
+        date_threshold = self.writer.get_date_threshold(self.report, {})
         self.assertEqual(date_threshold, None)
+
+
+    def test_get_date_threshold_when_no_previous_data_is_passed(self):
+        self.report.max_data_points = 3
+        self.report.start = datetime(2015, 1, 1)
+        self.report.granularity = 'days'
+        expected = datetime(2014, 12, 29)
+        result = self.writer.get_date_threshold(self.report, {})
+        self.assertEqual(result, expected)
 
 
     def test_get_date_threshold(self):
         self.report.max_data_points = 3
         self.report.start = datetime(2015, 1, 1)
         self.report.granularity = 'days'
+        previous_data = {
+            datetime(2014, 12, 30): ['some', 'data'],
+            datetime(2014, 12, 31): ['some', 'data']
+        }
         expected = datetime(2014, 12, 29)
-        result = self.writer.get_date_threshold(self.report)
+        result = self.writer.get_date_threshold(self.report, previous_data)
         self.assertEqual(result, expected)
 
 

@@ -60,6 +60,9 @@ class Selector(object):
         granularity_increment = get_increment(report.granularity)
         relative_now = now - lag_increment - granularity_increment
         last_date = self.truncate_date(relative_now, report.granularity)
+        if report.max_data_points:
+            jump_back = get_increment(report.granularity, report.max_data_points - 1)
+            first_date = max(first_date, last_date - jump_back)
         previous_results = get_previous_results(report, output_folder)
         already_done_dates = previous_results['data'].keys()
 

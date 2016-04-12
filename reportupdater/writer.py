@@ -106,7 +106,7 @@ class Writer(object):
         # Build final updated data.
         updated_header = current_header
         updated_data = {}
-        date_threshold = self.get_date_threshold(report)
+        date_threshold = self.get_date_threshold(report, previous_data)
         for date in previous_data:
             if not date_threshold or date > date_threshold:
                 updated_data[date] = previous_data[date]
@@ -148,10 +148,11 @@ class Writer(object):
             raise RuntimeError('Could not rename the output file (' + str(e) + ').')
 
 
-    def get_date_threshold(self, report):
+    def get_date_threshold(self, report, previous_data):
         if not report.max_data_points:
             return None
         # Note that some older python-dateutil versions have
         # problems when multiplying relativedelta instances.
         increment = get_increment(report.granularity, report.max_data_points)
-        return report.start - increment
+        last_data_point = max(previous_data.keys() + [report.start])
+        return last_data_point - increment
