@@ -10,6 +10,7 @@ import logging
 import subprocess
 import csv
 import os
+from copy import copy
 from datetime import datetime, date
 from selector import Selector
 from collections import defaultdict
@@ -51,7 +52,8 @@ class Executor(object):
             if report.db_key not in self.connections:
                 self.connections[report.db_key] = self.create_connection(report.db_key)
             connection = self.connections[report.db_key]
-            report.results = self.execute_sql(sql_query, connection, report.is_funnel)
+            header, data = self.execute_sql(sql_query, connection)
+            report.results = self.normalize_results(report, header, data)
             return True
         except Exception, e:
             message = ('Report "{report_key}" could not be executed '
@@ -115,32 +117,17 @@ class Executor(object):
             raise RuntimeError('MySQLdb can not connect to database (' + str(e) + ').')
 
 
-    def execute_sql(self, sql_query, connection, is_funnel=False):
+    def execute_sql(self, sql_query, connection):
         cursor = connection.cursor()
         try:
             cursor.execute(sql_query)
-            rows = cursor.fetchall()
+            data = cursor.fetchall()
             header = [field[0] for field in cursor.description]
         except Exception, e:
             raise RuntimeError('MySQLdb can not execute query (' + str(e) + ').')
         finally:
             cursor.close()
-        if is_funnel:
-            data = defaultdict(list)
-        else:
-            data = {}
-        for row in rows:
-            sql_date = row[0]
-            if not isinstance(sql_date, date):
-                raise ValueError('Query results do not have date values in first column.')
-            # normalize to datetime
-            row = list(row)  # make row item assignable
-            row[0] = datetime(sql_date.year, sql_date.month, sql_date.day, 0, 0, 0, 0)
-            if is_funnel:
-                data[row[0]].append(row)
-            else:
-                data[row[0]] = row
-        return {'header': header, 'data': data}
+        return header, data
 
 
     def execute_script_report(self, report):
@@ -157,33 +144,52 @@ class Executor(object):
         # it will be the absolute path to itself
         # NOTE: wouldn't this be available to the script anyway?
         parameters.append(os.path.dirname(report.script))
-        # execute the script, store its output in a pipe
         try:
+            # Execute the script, parse the results and normalize them.
             process = subprocess.Popen(parameters, stdout=subprocess.PIPE)
-        except OSError, e:
+            tsv_reader = csv.reader(process.stdout, delimiter='\t')
+            report.results = self.normalize_results(report, None, tsv_reader)
+        except Exception, e:
             message = ('Report "{report_key}" could not be executed '
                        'because of error: {error}')
             logging.error(message.format(report_key=report.key, error=str(e)))
             return False
-        # parse the results into the report object
-        header = None
-        if report.is_funnel:
-            data = defaultdict(list)
-        else:
-            data = {}
-        tsv_reader = csv.reader(process.stdout, delimiter='\t')
-        for row in tsv_reader:
-            if header is None:  # first row
-                header = row
-            else:  # other rows
-                try:
-                    row[0] = datetime.strptime(row[0], DATE_FORMAT)
-                except ValueError:
-                    logging.error('Query results do not have date values in first column.')
-                    return False
-                if report.is_funnel:
-                    data[row[0]].append(row)
-                else:
-                    data[row[0]] = row
-        report.results = {'header': header, 'data': data}
         return True
+
+
+    def normalize_results(self, report, header, data):
+        normalized_header = copy(header)
+        normalized_data = defaultdict(list) if report.is_funnel else {}
+
+        for row in data:
+            # If the header was not explicitly passed, use the first row.
+            if normalized_header is None:
+                normalized_header = row
+                continue
+
+            # Parse the date in the first column.
+            raw_date = row[0]
+            if isinstance(raw_date, date):
+                normalized_date = datetime(raw_date.year, raw_date.month,
+                                           raw_date.day, 0, 0, 0, 0)
+            elif isinstance(raw_date, str):
+                try:
+                    normalized_date = datetime.strptime(raw_date, DATE_FORMAT)
+                except:
+                    raise ValueError('Could not parse date from results.')
+            else:
+                raise ValueError('Results do not have dates in first column.')
+
+            # Build the normalized data.
+            normalized_row = [normalized_date] + list(row[1:])
+            if report.is_funnel:
+                normalized_data[normalized_date].append(normalized_row)
+            else:
+                normalized_data[normalized_date] = normalized_row
+
+        # If there's no data, store a row with null values to avoid recomputation.
+        if len(normalized_data) == 0:
+            empty_row = [report.start] + [None] * (len(normalized_header) - 1)
+            normalized_data[report.start] = [empty_row] if report.is_funnel else empty_row
+
+        return {'header': normalized_header, 'data': normalized_data}

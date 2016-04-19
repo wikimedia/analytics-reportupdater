@@ -152,45 +152,6 @@ class ExecutorTest(TestCase):
             self.executor.execute_sql('SOME sql;', connection)
 
 
-    def test_execute_sql_when_first_column_is_not_a_date(self):
-        def fetchall_callback():
-            return [
-                [date(2015, 1, 1), '1'],
-                ['bad formated date', '2']
-            ]
-        connection = ConnectionMock(None, fetchall_callback, [])
-        with self.assertRaises(ValueError):
-            self.executor.execute_sql('SOME sql;', connection)
-
-
-    def test_execute_sql_with_funnel_data(self):
-        def fetchall_callback():
-            return [
-                [date(2015, 1, 1), '1'],
-                [date(2015, 1, 1), '2'],
-                [date(2015, 1, 1), '3'],
-                [date(2015, 1, 2), '4'],
-                [date(2015, 1, 2), '5']
-            ]
-        connection = ConnectionMock(None, fetchall_callback, [])
-        result = self.executor.execute_sql('SOME sql;', connection, is_funnel=True)
-        expected = {
-            'header': [],
-            'data': {
-                datetime(2015, 1, 1): [
-                    [datetime(2015, 1, 1), '1'],
-                    [datetime(2015, 1, 1), '2'],
-                    [datetime(2015, 1, 1), '3']
-                ],
-                datetime(2015, 1, 2): [
-                    [datetime(2015, 1, 2), '4'],
-                    [datetime(2015, 1, 2), '5']
-                ]
-            }
-        }
-        self.assertEqual(result, expected)
-
-
     def test_execute_sql(self):
         def fetchall_callback():
             return [
@@ -199,13 +160,7 @@ class ExecutorTest(TestCase):
             ]
         connection = ConnectionMock(None, fetchall_callback, [])
         result = self.executor.execute_sql('SOME sql;', connection)
-        expected = {
-            'header': [],
-            'data': {
-                datetime(2015, 1, 1): [datetime(2015, 1, 1), '1'],
-                datetime(2015, 1, 2): [datetime(2015, 1, 2), '2'],
-            }
-        }
+        expected = ([], [[date(2015, 1, 1), '1'], [date(2015, 1, 2), '2']])
         self.assertEqual(result, expected)
 
 
@@ -271,20 +226,6 @@ class ExecutorTest(TestCase):
         self.assertEqual(success, False)
 
 
-    def test_execute_script_when_script_output_is_invalid(self):
-        class PopenReturnMock():
-            def __init__(self):
-                self.stdout = ['date\tvalue', 'invalid_date\t1']
-
-        def subprocess_popen_mock(parameters, **kwargs):
-            return PopenReturnMock()
-        subprocess_popen_stash = subprocess.Popen
-        subprocess.Popen = MagicMock(wraps=subprocess_popen_mock)
-        success = self.executor.execute_script_report(self.report)
-        subprocess.Popen = subprocess_popen_stash
-        self.assertEqual(success, False)
-
-
     def test_execute_script(self):
         class PopenReturnMock():
             def __init__(self):
@@ -302,16 +243,82 @@ class ExecutorTest(TestCase):
         self.assertEqual(self.report.results['data'], expected_data)
 
 
+    def test_normalize_results_when_header_is_not_set(self):
+        data = [['date', 'col1', 'col2'], ['2016-01-01', 1, 2]]
+        results = self.executor.normalize_results(self.report, None, data)
+        expected = {
+            'header': ['date', 'col1', 'col2'],
+            'data': {
+                datetime(2016, 1, 1): [datetime(2016, 1, 1), 1, 2]
+            }
+        }
+        self.assertEqual(results, expected)
+
+
+    def test_normalize_results_when_first_column_is_not_a_date(self):
+        header = ['date', 'col1', 'col2']
+        data = [
+            [date(2015, 1, 1), 1, 2],
+            ['bad formated date', 1, 2]
+        ]
+        with self.assertRaises(ValueError):
+            self.executor.normalize_results(self.report, header, data)
+
+
+    def test_normalize_results_when_data_is_empty(self):
+        header = ['date', 'col1', 'col2']
+        data = []
+        results = self.executor.normalize_results(self.report, header, data)
+        expected = {
+            'header': ['date', 'col1', 'col2'],
+            'data': {
+                datetime(2015, 1, 1): [datetime(2015, 1, 1), None, None]
+            }
+        }
+        self.assertEqual(results, expected)
+
+    def test_normalize_results_with_funnel_data(self):
+        header = ['date', 'val']
+        data = [
+            [date(2015, 1, 1), '1'],
+            [date(2015, 1, 1), '2'],
+            [date(2015, 1, 1), '3'],
+            [date(2015, 1, 2), '4'],
+            [date(2015, 1, 2), '5']
+        ]
+        self.report.is_funnel = True
+        results = self.executor.normalize_results(self.report, header, data)
+        expected = {
+            'header': ['date', 'val'],
+            'data': {
+                datetime(2015, 1, 1): [
+                    [datetime(2015, 1, 1), '1'],
+                    [datetime(2015, 1, 1), '2'],
+                    [datetime(2015, 1, 1), '3']
+                ],
+                datetime(2015, 1, 2): [
+                    [datetime(2015, 1, 2), '4'],
+                    [datetime(2015, 1, 2), '5']
+                ]
+            }
+        }
+        self.assertEqual(results, expected)
+
+
     def test_run(self):
         selected = [self.report]
         self.executor.selector.run = MagicMock(return_value=selected)
         self.executor.create_connection = MagicMock(return_value='connection')
-        results = {
-            'header': ['some', 'sql', 'header'],
-            'data': {datetime(2015, 1, 1): [date(2015, 1, 1), 'some', 'value']}
-        }
+        results = (
+            ['some', 'sql', 'header'],
+            [[date(2015, 1, 1), 'some', 'value']]
+        )
         self.executor.execute_sql = MagicMock(return_value=results)
         executed = list(self.executor.run())
         self.assertEqual(len(executed), 1)
         report = executed[0]
-        self.assertEqual(report.results, results)
+        expected = {
+            'header': ['some', 'sql', 'header'],
+            'data': {datetime(2015, 1, 1): [datetime(2015, 1, 1), 'some', 'value']}
+        }
+        self.assertEqual(report.results, expected)
