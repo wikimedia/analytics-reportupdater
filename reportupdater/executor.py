@@ -110,7 +110,6 @@ class Executor(object):
                 port=db_port,
                 read_default_file=db_creds_file,
                 db=db_name,
-                autocommit=True, # T134950
                 charset='utf8',
                 use_unicode=True
             )
