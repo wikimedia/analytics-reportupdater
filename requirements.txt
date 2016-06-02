@@ -1,4 +1,4 @@
 python-dateutil==2.2
-MySQL-python==1.2.5
+pymysql==0.6.2
 PyYAML==3.10
 Jinja2==2.6

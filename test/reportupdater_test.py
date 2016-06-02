@@ -3,7 +3,7 @@ import os
 import io
 import time
 import shutil
-import MySQLdb
+import pymysql
 from reportupdater import reportupdater
 from reportupdater.utils import DATE_AND_TIME_FORMAT, DATE_FORMAT
 from test_utils import ConnectionMock
@@ -18,7 +18,7 @@ class ReportUpdaterTest(TestCase):
 
 
     def setUp(self):
-        self.mysqldb_connect_stash = MySQLdb.connect
+        self.mysqldb_connect_stash = pymysql.connect
         self.utcnow_stash = reportupdater.utcnow
         self.config_folder = 'test/fixtures/config'
         self.query_folder = 'test/fixtures/queries'
@@ -28,7 +28,7 @@ class ReportUpdaterTest(TestCase):
 
 
     def tearDown(self):
-        MySQLdb.connect = self.mysqldb_connect_stash
+        pymysql.connect = self.mysqldb_connect_stash
         reportupdater.utcnow = self.utcnow_stash
         for path in self.paths_to_clean:
             try:
@@ -52,7 +52,7 @@ class ReportUpdaterTest(TestCase):
             # thus giving time to the second thread to start.
             time.sleep(0.3)
             return connection_mock
-        MySQLdb.connect = MagicMock(wraps=connect_with_lag)
+        pymysql.connect = MagicMock(wraps=connect_with_lag)
 
         # The first thread should execute normally and output the results.
         output_path1 = os.path.join(self.output_folder, 'reportupdater_test1.tsv')
@@ -102,7 +102,7 @@ class ReportUpdaterTest(TestCase):
             return [[sql_date, str(value)]]
         header = ['date', 'value']
         connection_mock = ConnectionMock(None, fetchall_callback, header)
-        MySQLdb.connect = MagicMock(return_value=connection_mock)
+        pymysql.connect = MagicMock(return_value=connection_mock)
 
         config_path = os.path.join(self.config_folder, 'reportupdater_test1.yaml')
         output_path = os.path.join(self.output_folder, 'reportupdater_test1.tsv')
@@ -143,7 +143,7 @@ class ReportUpdaterTest(TestCase):
             ]
         header = ['date', 'value']
         connection_mock = ConnectionMock(None, fetchall_callback, header)
-        MySQLdb.connect = MagicMock(return_value=connection_mock)
+        pymysql.connect = MagicMock(return_value=connection_mock)
 
         config_path = os.path.join(self.config_folder, 'reportupdater_test3.yaml')
         output_path = os.path.join(self.output_folder, 'reportupdater_test3.tsv')
@@ -187,7 +187,7 @@ class ReportUpdaterTest(TestCase):
             return [[sql_date, str(value)]]
         header = ['date', 'value']
         connection_mock = ConnectionMock(None, fetchall_callback, header)
-        MySQLdb.connect = MagicMock(return_value=connection_mock)
+        pymysql.connect = MagicMock(return_value=connection_mock)
 
         config_path = os.path.join(self.config_folder, 'reportupdater_test2.yaml')
         output_path = os.path.join(self.output_folder, 'reportupdater_test2.tsv')
@@ -220,7 +220,7 @@ class ReportUpdaterTest(TestCase):
             return [[datetime(2015, 1, 1), str(1)]]
         header = ['date', 'value']
         connection_mock = ConnectionMock(None, fetchall_callback, header)
-        MySQLdb.connect = MagicMock(return_value=connection_mock)
+        pymysql.connect = MagicMock(return_value=connection_mock)
 
         config_path = os.path.join(self.config_folder, 'reportupdater_test4.yaml')
         wikis_path = 'test/fixtures/wikis.txt'

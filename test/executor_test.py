@@ -9,7 +9,7 @@ from reportupdater.utils import DATE_FORMAT
 from unittest import TestCase
 from mock import MagicMock
 from datetime import datetime, date
-import MySQLdb
+import pymysql
 import subprocess
 import os
 
@@ -129,19 +129,19 @@ class ExecutorTest(TestCase):
 
 
     def test_create_connection_when_mysqldb_connect_raises_error(self):
-        mysqldb_connect_stash = MySQLdb.connect
-        MySQLdb.connect = MagicMock(side_effect=Exception())
+        mysqldb_connect_stash = pymysql.connect
+        pymysql.connect = MagicMock(side_effect=Exception())
         with self.assertRaises(RuntimeError):
             self.executor.create_connection(self.db_key)
-        MySQLdb.connect = mysqldb_connect_stash
+        pymysql.connect = mysqldb_connect_stash
 
 
     def test_create_connection(self):
-        mysqldb_connect_stash = MySQLdb.connect
-        MySQLdb.connect = MagicMock(return_value='connection')
+        mysqldb_connect_stash = pymysql.connect
+        pymysql.connect = MagicMock(return_value='connection')
         connection = self.executor.create_connection(self.db_key)
         self.assertEqual(connection, 'connection')
-        MySQLdb.connect = mysqldb_connect_stash
+        pymysql.connect = mysqldb_connect_stash
 
 
     def test_execute_sql_when_mysqldb_execution_raises_error(self):

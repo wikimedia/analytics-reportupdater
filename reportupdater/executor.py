@@ -5,7 +5,7 @@
 # formats the results data and stores it inside the report object.
 
 
-import MySQLdb
+import pymysql
 import logging
 import subprocess
 import csv
@@ -105,16 +105,17 @@ class Executor(object):
         if not isinstance(db_name, str):
             raise ValueError('DB name is not a string.')
         try:
-            return MySQLdb.connect(
+            return pymysql.connect(
                 host=db_host,
                 port=db_port,
                 read_default_file=db_creds_file,
                 db=db_name,
+                autocommit=True,
                 charset='utf8',
                 use_unicode=True
             )
         except Exception, e:
-            raise RuntimeError('MySQLdb can not connect to database (' + str(e) + ').')
+            raise RuntimeError('pymysql can not connect to database (' + str(e) + ').')
 
 
     def execute_sql(self, sql_query, connection):
@@ -124,7 +125,7 @@ class Executor(object):
             data = cursor.fetchall()
             header = [field[0] for field in cursor.description]
         except Exception, e:
-            raise RuntimeError('MySQLdb can not execute query (' + str(e) + ').')
+            raise RuntimeError('pymysql can not execute query (' + str(e) + ').')
         finally:
             cursor.close()
         return header, data
