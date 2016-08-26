@@ -64,20 +64,6 @@ def get_previous_results(report, output_folder):
     return previous_results
 
 
-def get_wikis(config):
-    if 'wikis_path' not in config:
-        raise_critical(KeyError, 'Wikis path is not in config.')
-    try:
-        wikis_file = io.open(config['wikis_path'], 'r')
-    except Exception, e:
-        raise_critical(RuntimeError, 'Could not open the wikis file (' + str(e) + ').')
-    wikis = []
-    for wiki in wikis_file:
-        wikis.append(wiki.strip())
-    wikis_file.close()
-    return wikis
-
-
 def get_exploded_report_output_path(output_folder, explode_by, report_key):
     output_folder = os.path.join(output_folder, report_key)
     placeholders = sorted(explode_by.keys())

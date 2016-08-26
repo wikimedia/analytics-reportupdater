@@ -24,8 +24,6 @@ def main():
                         help='Folder to write the TSV files to.')
     parser.add_argument('--config-path',
                         help='Yaml configuration file. Default: <query_folder>/config.yaml.')
-    parser.add_argument('--wikis_path',
-                        help='All wikis list file path. Default: wikis.txt.')
     parser.add_argument('-l', '--log-level',
                         help='(debug|info|warning|error|critical)')
     args = vars(parser.parse_args())

@@ -14,7 +14,7 @@ import io
 import logging
 from datetime import datetime, date
 from report import Report
-from utils import DATE_FORMAT, raise_critical, get_wikis
+from utils import DATE_FORMAT, raise_critical
 
 
 class Reader(object):
@@ -146,8 +146,6 @@ class Reader(object):
 
     def get_explode_by(self, report_config, query_folder):
         explode_by = {}
-        if 'by_wiki' in report_config and report_config['by_wiki'] is True:
-            explode_by['wiki'] = get_wikis(self.config) + ['all']
         if 'explode_by' in report_config:
             for placeholder, values_str in report_config['explode_by'].iteritems():
                 values = [value.strip() for value in values_str.split(',')]
@@ -158,7 +156,7 @@ class Reader(object):
                             read_values = [v.strip() for v in explode_file.readlines()]
                         if (len(read_values) > 0):
                             explode_by[placeholder] = read_values
-                    except IOError, e:
+                    except IOError:
                         explode_by[placeholder] = values
                 elif len(values) > 1:
                     explode_by[placeholder] = values

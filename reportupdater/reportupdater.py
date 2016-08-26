@@ -42,7 +42,6 @@ def run(**kwargs):
         config['current_exec_time'] = current_exec_time
         config['query_folder'] = params['query_folder']
         config['output_folder'] = params['output_folder']
-        config['wikis_path'] = params['wikis_path']
 
         reader = Reader(config)
         selector = Selector(reader, config)
@@ -63,7 +62,6 @@ def get_params(passed_params):
         'pid_file_path': os.path.join(query_folder, '.reportupdater.pid'),
         'config_path': os.path.join(query_folder, 'config.yaml'),
         'output_folder': os.path.join(project_root, 'output'),
-        'wikis_path': os.path.join(project_root, 'wikis.txt'),
         'log_level': logging.WARNING
     }
     passed_params = {k: v for k, v in passed_params.iteritems() if v is not None}
