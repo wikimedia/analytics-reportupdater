@@ -223,12 +223,10 @@ class ReportUpdaterTest(TestCase):
         pymysql.connect = MagicMock(return_value=connection_mock)
 
         config_path = os.path.join(self.config_folder, 'reportupdater_test4.yaml')
-        wikis_path = 'test/fixtures/wikis.txt'
         reportupdater.run(
             config_path=config_path,
             query_folder=self.query_folder,
-            output_folder=self.output_folder,
-            wikis_path=wikis_path
+            output_folder=self.output_folder
         )
 
         output_folder = os.path.join(self.output_folder, 'reportupdater_test4')
@@ -238,11 +236,9 @@ class ReportUpdaterTest(TestCase):
             'visualeditor/wiki1.tsv',
             'visualeditor/wiki2.tsv',
             'visualeditor/wiki3.tsv',
-            'visualeditor/all.tsv',
             'wikitext/wiki1.tsv',
             'wikitext/wiki2.tsv',
             'wikitext/wiki3.tsv',
-            'wikitext/all.tsv'
         ]
         for output_filename in output_filenames:
             output_path = os.path.join(output_folder, output_filename)

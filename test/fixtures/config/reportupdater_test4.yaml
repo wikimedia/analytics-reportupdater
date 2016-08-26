@@ -10,6 +10,6 @@ reports:
     reportupdater_test4:
         granularity: days
         starts: 2015-01-01
-        by_wiki: true
         explode_by:
+            wiki: ../wikis.txt
             editor: "visualeditor, wikitext"

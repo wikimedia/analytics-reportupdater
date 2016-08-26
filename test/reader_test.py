@@ -219,17 +219,32 @@ class ReaderTest(TestCase):
         self.assertEqual(result, expected)
 
 
-    def test_get_explode_by_wiki(self):
-        self.config['wikis_path'] = 'test/fixtures/wikis.txt'
-        result = self.reader.get_explode_by({})
-        self.assertNotIn('wiki', result)
-        result = self.reader.get_explode_by({'by_wiki': ('not', 'a', 'bool')})
-        self.assertNotIn('wiki', result)
-        result = self.reader.get_explode_by({'by_wiki': False})
-        self.assertNotIn('wiki', result)
-        result = self.reader.get_explode_by({'by_wiki': True})
-        self.assertIn('wiki', result)
-        self.assertEqual(result['wiki'], ['wiki1', 'wiki2', 'wiki3', 'all'])
+    def test_get_explode_by_using_file(self):
+        report_config = {
+            'explode_by': {
+                'wiki': '../wikis.txt'
+            }
+        }
+        query_folder = self.config['query_folder']
+        result = self.reader.get_explode_by(report_config, query_folder)
+        expected = {
+            'wiki': ['wiki1', 'wiki2', 'wiki3']
+        }
+        self.assertEqual(result, expected)
+
+
+    def test_get_explode_by_with_one_element_that_is_not_a_file(self):
+        report_config = {
+            'explode_by': {
+                'wiki': 'somewiki'
+            }
+        }
+        query_folder = self.config['query_folder']
+        result = self.reader.get_explode_by(report_config, query_folder)
+        expected = {
+            'wiki': ['somewiki']
+        }
+        self.assertEqual(result, expected)
 
 
     def test_get_explode_by(self):
@@ -239,7 +254,8 @@ class ReaderTest(TestCase):
                 'language': 'en, de, fr'
             }
         }
-        result = self.reader.get_explode_by(report_config)
+        query_folder = self.config['query_folder']
+        result = self.reader.get_explode_by(report_config, query_folder)
         expected = {
             'editor': ['visualeditor', 'wikitext'],
             'language': ['en', 'de', 'fr']

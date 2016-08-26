@@ -60,7 +60,7 @@ class Reader(object):
         report.lag = self.get_lag(report_config)
         report.is_funnel = self.get_is_funnel(report_config)
         report.first_date = self.get_first_date(report_config)
-        report.explode_by = self.get_explode_by(report_config)
+        report.explode_by = self.get_explode_by(report_config, query_folder)
         report.max_data_points = self.get_max_data_points(report_config)
         executable = self.get_executable(report_config) or report_key
         if report.type == 'sql':
@@ -144,14 +144,24 @@ class Reader(object):
         return os.path.join(query_folder, report_key)
 
 
-    def get_explode_by(self, report_config):
+    def get_explode_by(self, report_config, query_folder):
         explode_by = {}
         if 'by_wiki' in report_config and report_config['by_wiki'] is True:
             explode_by['wiki'] = get_wikis(self.config) + ['all']
         if 'explode_by' in report_config:
             for placeholder, values_str in report_config['explode_by'].iteritems():
                 values = [value.strip() for value in values_str.split(',')]
-                explode_by[placeholder] = values
+                if len(values) == 1:
+                    explode_path = os.path.join(query_folder, values[0])
+                    try:
+                        with io.open(explode_path, encoding='utf-8') as explode_file:
+                            read_values = [v.strip() for v in explode_file.readlines()]
+                        if (len(read_values) > 0):
+                            explode_by[placeholder] = read_values
+                    except IOError, e:
+                        explode_by[placeholder] = values
+                elif len(values) > 1:
+                    explode_by[placeholder] = values
         return explode_by
 
 
