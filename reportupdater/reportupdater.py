@@ -25,7 +25,7 @@ from reader import Reader
 from selector import Selector
 from executor import Executor
 from writer import Writer
-from utils import DATE_AND_TIME_FORMAT
+from utils import DATE_AND_TIME_FORMAT, DATE_FORMAT
 
 
 def run(**kwargs):
@@ -42,6 +42,7 @@ def run(**kwargs):
         config['current_exec_time'] = current_exec_time
         config['query_folder'] = params['query_folder']
         config['output_folder'] = params['output_folder']
+        config['reruns'], rerun_files = read_reruns(params['query_folder'])
 
         reader = Reader(config)
         selector = Selector(reader, config)
@@ -49,6 +50,7 @@ def run(**kwargs):
         writer = Writer(executor, config)
         writer.run()
 
+        delete_reruns(rerun_files)  # delete rerun files that have been processed
         delete_pid_file(params)  # free lock for other instances to execute
         logging.info('Execution complete.')
     else:
@@ -142,6 +144,50 @@ def load_config(config_path):
             return yaml.load(config_file)
     except IOError, e:
         raise IOError('Can not read the config file because of: (' + str(e) + ').')
+
+
+def read_reruns(query_folder):
+    reruns_folder = os.path.join(query_folder, '.reruns')
+    if os.path.isdir(reruns_folder):
+        try:
+            rerun_candidates = os.listdir(reruns_folder)
+        except IOError, e:
+            raise IOError('Can not read rerun folder because of: (' + str(e) + ').')
+        rerun_config, rerun_files = {}, []
+        for rerun_candidate in rerun_candidates:
+            rerun_path = os.path.join(reruns_folder, rerun_candidate)
+            try:
+                # Use r+ mode (read and write) to force an error
+                # if the file is still being written.
+                with io.open(rerun_path, 'r+', encoding='utf-8') as rerun_file:
+                    reruns = rerun_file.readlines()
+                parse_reruns(reruns, rerun_config)
+                rerun_files.append(rerun_path)
+            except:
+                logging.warning(
+                    'Rerun file %s could not be parsed and will be ignored.' % rerun_path
+                )
+        return (rerun_config, rerun_files)
+    else:
+        return ({}, [])
+
+
+def parse_reruns(lines, rerun_config):
+    values = [l.strip() for l in lines]
+    start_date = datetime.strptime(values[0], DATE_FORMAT)
+    end_date = datetime.strptime(values[1], DATE_FORMAT)
+    for report in values[2:]:
+        if report not in rerun_config:
+            rerun_config[report] = []
+        rerun_config[report].append((start_date, end_date))
+
+
+def delete_reruns(rerun_files):
+    for rerun_file in rerun_files:
+        try:
+            os.remove(rerun_file)
+        except IOError:
+            logging.warning('Rerun file %s could not be deleted.' % rerun_file)
 
 
 def utcnow():

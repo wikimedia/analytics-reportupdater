@@ -63,7 +63,8 @@ class Selector(object):
         if report.max_data_points:
             jump_back = get_increment(report.granularity, report.max_data_points - 1)
             first_date = max(first_date, last_date - jump_back)
-        previous_results = get_previous_results(report, output_folder)
+        previous_results = get_previous_results(
+            report, output_folder, self.config['reruns'])
         already_done_dates = previous_results['data'].keys()
 
         for start in self.get_all_start_dates(first_date, last_date, granularity_increment):

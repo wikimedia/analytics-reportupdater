@@ -18,7 +18,8 @@ class WriterTest(TestCase):
 
     def setUp(self):
         self.config = {
-            'output_folder': 'test/fixtures/output'
+            'output_folder': 'test/fixtures/output',
+            'reruns': {}
         }
         reader = Reader(self.config)
         selector = Selector(reader, self.config)
@@ -180,7 +181,6 @@ class WriterTest(TestCase):
     def test_update_results_when_header_has_new_columns(self):
         # see setUp for the fake data written to this report output
         self.report.key = 'writer_test_header_change'
-
         new_header = ['date', 'val1', 'insert middle', 'val2', 'val3', 'insert after']
         old_date = datetime(2015, 1, 1)
         new_date = datetime(2015, 1, 2)
@@ -198,7 +198,6 @@ class WriterTest(TestCase):
     def test_update_results_when_header_has_moved_columns(self):
         # see setUp for the fake data written to this report output
         self.report.key = 'writer_test_header_change'
-
         new_header = ['date', 'val2', 'val1', 'val3']
         old_date = datetime(2015, 1, 1)
         new_date = datetime(2015, 1, 2)
@@ -216,7 +215,6 @@ class WriterTest(TestCase):
     def test_update_results_when_header_has_removed_columns(self):
         # see setUp for the fake data written to this report output
         self.report.key = 'writer_test_header_change'
-
         new_header = ['date', 'val1', 'val3']
         new_date = datetime(2015, 1, 2)
         new_row = [datetime(2015, 1, 2), 1, 3]
@@ -232,7 +230,6 @@ class WriterTest(TestCase):
     def test_update_results_when_header_has_different_number_of_columns(self):
         # see setUp for the fake data written to this report output
         self.report.key = 'writer_test_header_change'
-
         new_header = ['date', 'val1', 'val2', 'val3']
         new_date = datetime(2015, 1, 2)
         new_row = [datetime(2015, 1, 2), 1, 2, 3, 'Additional']
@@ -247,7 +244,6 @@ class WriterTest(TestCase):
     def test_update_results_when_header_has_new_and_moved_columns(self):
         # see setUp for the fake data written to this report output
         self.report.key = 'writer_test_header_change'
-
         new_header = ['date', 'val2', 'insert middle', 'val1', 'val3', 'insert after']
         old_date = datetime(2015, 1, 1)
         new_date = datetime(2015, 1, 2)
@@ -265,7 +261,6 @@ class WriterTest(TestCase):
     def test_update_results_when_max_data_points_is_set(self):
         # see setUp for the fake data written to this report output
         self.report.key = 'writer_test_header_change'
-
         new_date = datetime(2015, 1, 2)
         new_row = [new_date, 1, 2, 3]
         self.report.max_data_points = 1

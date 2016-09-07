@@ -1,0 +1,12 @@
+databases:
+    reportupdater_db:
+        host: "some.db.host"
+        port: 1234
+        creds_file: /creds/.my.cnf
+        db: some_db_name
+defaults:
+    db: reportupdater_db
+reports:
+    reportupdater_test6:
+        granularity: days
+        starts: 2016-01-01

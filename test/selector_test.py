@@ -17,7 +17,8 @@ class SelectorTest(TestCase):
     def setUp(self):
         self.config = {
             'output_folder': 'test/fixtures/output',
-            'current_exec_time': datetime(2015, 1, 3, 1, 20, 30)
+            'current_exec_time': datetime(2015, 1, 3, 1, 20, 30),
+            'reruns': {}
         }
         reader = Reader(self.config)
         self.selector = Selector(reader, self.config)
@@ -65,6 +66,24 @@ class SelectorTest(TestCase):
         self.assertEqual(len(reports), 1)
         self.assertEqual(reports[0].start, datetime(2015, 1, 1))
         self.assertEqual(reports[0].end, datetime(2015, 1, 2))
+
+
+    def test_get_interval_reports_when_there_are_reruns(self):
+        self.report.key = 'selector_test3'
+        # see: test/fixtures/output/selector_test3.tsv
+        self.config['reruns'] = {
+            'selector_test3': [
+                (datetime(2015, 1, 2), datetime(2015, 1, 3)),
+                (datetime(2015, 1, 4), datetime(2015, 1, 5))
+            ]
+        }
+        now = datetime(2015, 1, 6)
+        reports = list(self.selector.get_interval_reports(self.report, now))
+        self.assertEqual(len(reports), 2)
+        self.assertEqual(reports[0].start, datetime(2015, 1, 2))
+        self.assertEqual(reports[0].end, datetime(2015, 1, 3))
+        self.assertEqual(reports[1].start, datetime(2015, 1, 4))
+        self.assertEqual(reports[1].end, datetime(2015, 1, 5))
 
 
     def test_truncate_date_when_period_is_hours(self):

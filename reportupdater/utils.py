@@ -22,7 +22,7 @@ def raise_critical(error_class, message):
     raise error_class(message)
 
 
-def get_previous_results(report, output_folder):
+def get_previous_results(report, output_folder, reruns):
     # Reads a report file to get its results
     # and returns them in the expected dict(date->row) format.
     previous_results = {'header': [], 'data': {}}
@@ -54,6 +54,8 @@ def get_previous_results(report, output_folder):
                     date = datetime.strptime(row[0], DATE_FORMAT)
                 except ValueError:
                     raise ValueError('Output file date does not match date format.')
+                if needs_rerun(date, reruns.get(report.key, None)):
+                    continue  # Do not list this date so that it is re-run.
                 row[0] = date
                 if report.is_funnel:
                     data[date].append(row)
@@ -62,6 +64,15 @@ def get_previous_results(report, output_folder):
         previous_results['header'] = header
         previous_results['data'] = data
     return previous_results
+
+
+def needs_rerun(date, rerun_intervals):
+    if rerun_intervals is None:
+        return False
+    for start, end in rerun_intervals:
+        if date >= start and date < end:
+            return True
+    return False
 
 
 def get_exploded_report_output_path(output_folder, explode_by, report_key):

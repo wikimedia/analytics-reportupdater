@@ -62,8 +62,8 @@ class Writer(object):
                 if len(row) != len(current_header):
                     raise ValueError('Results and header do not match.')
 
-        # Get previous results.
-        previous_results = get_previous_results(report, self.get_output_folder())
+        # Get previous results (no need to pass the reruns, they will be overwritten).
+        previous_results = get_previous_results(report, self.get_output_folder(), {})
         previous_header = previous_results['header']
         previous_data = previous_results['data']
         if not previous_header:

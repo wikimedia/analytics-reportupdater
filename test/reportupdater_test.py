@@ -274,3 +274,73 @@ class ReportUpdaterTest(TestCase):
             self.assertEqual(date_str, expected_date_str)
             self.assertEqual(type(value), unicode)
             expected_date += relativedelta(days=+1)
+
+
+    def test_daily_report_with_previous_results_and_reruns(self):
+        def fetchall_callback():
+            # This method will return a subsequent row with each call.
+            try:
+                sql_date = self.last_date + relativedelta(days=+1)
+                value = self.last_value + 1
+            except AttributeError:
+                # Starts at Mar, Jan and Feb are in previous results
+                sql_date = datetime(2016, 1, 1)
+                value = 1
+            self.last_date = sql_date
+            self.last_value = value
+            return [[sql_date, str(value)]]
+        header = ['date', 'value']
+        connection_mock = ConnectionMock(None, fetchall_callback, header)
+        pymysql.connect = MagicMock(return_value=connection_mock)
+
+        config_path = os.path.join(self.config_folder, 'reportupdater_test6.yaml')
+        output_path = os.path.join(self.output_folder, 'reportupdater_test6.tsv')
+        with io.open(output_path, 'w') as output_file:
+            output_file.write(unicode(
+                'date\tvalue\n'
+                '2016-01-01\t1\n'
+                '2016-01-02\ta\n'  # Note irregular result.
+                '2016-01-03\t3\n'
+                '2016-01-04\tb\n'  # Note irregular result.
+                '2016-01-05\t5\n'
+            ))
+        self.paths_to_clean.extend([output_path])
+
+        # Build rerun files.
+        rerun_folder = os.path.join(self.query_folder, '.reruns')
+        os.makedirs(rerun_folder)
+        rerun_path1 = os.path.join(rerun_folder, 'reportupdater_test6.1')
+        with io.open(rerun_path1, 'w') as rerun_file1:
+            rerun_file1.write(unicode(
+                '2016-01-02\n'
+                '2016-01-03\n'
+                'reportupdater_test6\n'
+            ))
+        rerun_path2 = os.path.join(rerun_folder, 'reportupdater_test6.2')
+        with io.open(rerun_path2, 'w') as rerun_file2:
+            rerun_file2.write(unicode(
+                '2016-01-04\n'
+                '2016-01-05\n'
+                'reportupdater_test6\n'
+            ))
+        self.paths_to_clean.extend([rerun_folder])
+
+        reportupdater.run(
+            config_path=config_path,
+            query_folder=self.query_folder,
+            output_folder=self.output_folder
+        )
+        self.assertTrue(os.path.exists(output_path))
+        with io.open(output_path, 'r', encoding='utf-8') as output_file:
+            output_lines = output_file.readlines()
+        self.assertTrue(len(output_lines) > 1)
+        header = output_lines.pop(0).strip()
+        self.assertEqual(header, 'date\tvalue')
+        # Assert that all lines hold subsequent values.
+        expected_date = datetime(2016, 1, 1)
+        expected_value = 1
+        for line in output_lines:
+            expected_line = expected_date.strftime(DATE_FORMAT) + '\t' + str(expected_value)
+            self.assertEqual(line.strip(), expected_line)
+            expected_date += relativedelta(days=+1)
+            expected_value += 1

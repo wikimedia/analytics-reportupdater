@@ -1,3 +1,5 @@
 #!/usr/bin/env bash
-# create SSH tunnel to EventLogging databases through stat1003
-ssh -L 3307:s1-analytics-slave.eqiad.wmnet:3306 -L 3308:s4-analytics-slave.eqiad.wmnet:3306 stat1003.eqiad.wmnet
+
+# Create SSH tunnel to EventLogging databases through stat1003.
+# Replace s1-analytics-slave.eqiad.wmnet with any other host if you need.
+ssh -L 3307:s1-analytics-slave.eqiad.wmnet:3306 stat1003.eqiad.wmnet
