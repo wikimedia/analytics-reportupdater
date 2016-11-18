@@ -18,13 +18,14 @@ from utils import (raise_critical, get_previous_results,
 class Writer(object):
 
 
-    def __init__(self, executor, config):
+    def __init__(self, executor, config, graphite=None):
         if not isinstance(executor, Executor):
             raise_critical(ValueError, 'Executor is not valid.')
         if not isinstance(config, dict):
             raise_critical(ValueError, 'Config is not a dict.')
         self.executor = executor
         self.config = config
+        self.graphite = graphite
 
 
     def get_output_folder(self):
@@ -41,10 +42,10 @@ class Writer(object):
         for report in self.executor.run():
             logging.debug('Writing "{report}"...'.format(report=str(report)))
 
-            header, updated_data = self.update_results(report)
-
+            header, updated_data, new_dates = self.update_results(report)
             try:
                 self.write_results(header, updated_data, report, self.get_output_folder())
+                self.record_to_graphite(report, new_dates)
                 logging.info('Report {report_key} has been updated.'.format(report_key=report.key))
             except Exception, e:
                 message = ('Report "{report_key}" could not be written '
@@ -53,6 +54,13 @@ class Writer(object):
 
 
     def update_results(self, report):
+        """
+        Returns
+            (header, updated_data, new_dates)
+            header          : the new header with any changes inferred from results
+            updated_data    : the new data, including reruns
+            new_dates       : list of only the new dates output, excluding rerun dates
+        """
         # Get current results.
         current_header = copy(report.results['header'])
         current_data = deepcopy(report.results['data'])
@@ -71,6 +79,9 @@ class Writer(object):
                 previous_header = current_header
             else:
                 raise ValueError('Previous results have no header.')
+
+        # The new dates will not include rerun dates, as those should always be in previous data
+        new_dates = list(set(current_data.keys()) - set(previous_data.keys()))
 
         # Current results may have a different header than previous results.
         # They may contain new columns, column order changes, or removal
@@ -112,7 +123,7 @@ class Writer(object):
                 updated_data[date] = previous_data[date]
         updated_data.update(current_data)
 
-        return updated_header, updated_data
+        return updated_header, updated_data, new_dates
 
 
     def write_results(self, header, data, report, output_folder):
@@ -156,3 +167,15 @@ class Writer(object):
         increment = get_increment(report.granularity, report.max_data_points)
         last_data_point = max(previous_data.keys() + [report.start])
         return last_data_point - increment
+
+    def record_to_graphite(self, report, dates_to_send):
+        if self.graphite is None:
+            return
+
+        data = report.results['data']
+        dates = sorted(dates_to_send)
+        rows = [data[date] for date in dates]
+        if report.is_funnel:
+            rows = [row for sublist in rows for row in sublist]  # flatten
+        for row in rows:
+            self.graphite.record_row(row, report)

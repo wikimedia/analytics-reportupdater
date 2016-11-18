@@ -28,6 +28,7 @@ class Report(object):
         self.script = None
         self.explode_by = {}
         self.max_data_points = None
+        self.graphite = {}
         self.results = {'header': [], 'data': {}}
 
 
@@ -47,6 +48,7 @@ class Report(object):
             ' script=' + str(self.script) +
             ' explode_by=' + str(self.explode_by) +
             ' max_data_points=' + str(self.max_data_points) +
+            ' graphite=' + str(self.graphite) +
             ' results=' + self.format_results(self.results) +
             '>'
         )

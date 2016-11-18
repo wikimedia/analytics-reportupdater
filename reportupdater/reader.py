@@ -68,6 +68,7 @@ class Reader(object):
             report.sql_template = self.get_sql_template(executable, query_folder)
         elif report.type == 'script':
             report.script = self.get_script(executable, query_folder)
+        report.graphite = self.get_graphite(report_config)
         return report
 
 
@@ -179,3 +180,12 @@ class Reader(object):
         if not isinstance(execute, str):
             raise TypeError('Execute is not a string.')
         return execute
+
+
+    def get_graphite(self, report_config):
+        if 'graphite' not in report_config:
+            return {}
+        graphite = report_config['graphite']
+        if not isinstance(graphite, dict):
+            raise TypeError('Graphite is not a dict.')
+        return graphite

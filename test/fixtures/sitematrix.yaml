@@ -1,0 +1,3 @@
+all: all
+enwiki: en.wiki
+rowiktionary: ro.wiktionary

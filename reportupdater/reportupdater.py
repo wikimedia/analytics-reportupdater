@@ -25,6 +25,7 @@ from reader import Reader
 from selector import Selector
 from executor import Executor
 from writer import Writer
+from graphite import Graphite
 from utils import DATE_AND_TIME_FORMAT, DATE_FORMAT
 
 
@@ -47,7 +48,7 @@ def run(**kwargs):
         reader = Reader(config)
         selector = Selector(reader, config)
         executor = Executor(selector, config)
-        writer = Writer(executor, config)
+        writer = Writer(executor, config, configure_graphite(config))
         writer.run()
 
         delete_reruns(rerun_files)  # delete rerun files that have been processed
@@ -188,6 +189,18 @@ def delete_reruns(rerun_files):
             os.remove(rerun_file)
         except IOError:
             logging.warning('Rerun file %s could not be deleted.' % rerun_file)
+
+
+def configure_graphite(config):
+    graphite = None
+    if 'graphite' in config:
+        # load any lookup dictionaries that Graphite metrics can use
+        for key, lookup in config['graphite'].get('lookups', {}).items():
+            path = os.path.join(config['query_folder'], lookup)
+            config['graphite']['lookups'][key] = load_config(path)
+        graphite = Graphite(config)
+
+    return graphite
 
 
 def utcnow():

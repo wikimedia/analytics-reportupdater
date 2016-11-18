@@ -1,0 +1,26 @@
+databases:
+    reportupdater_db:
+        host: "some.db.host"
+        port: 1234
+        creds_file: /creds/.my.cnf
+        db: some_db_name
+graphite:
+    host: "some.graphite.host"
+    port: 1234
+    lookups:
+        wiki: ../sitematrix.yaml
+
+defaults:
+    db: reportupdater_db
+reports:
+    graphite_test1:
+        granularity: days
+        starts: 2015-01-01
+        explode_by:
+            wiki: "enwiki,rowiktionary,all"
+            editor: "visualeditor,wikitext"
+        graphite:
+            path: "{_metric}.{wiki}.{editor}"
+            metrics:
+                metric_name_one: val1
+                metric_name_two: val3
