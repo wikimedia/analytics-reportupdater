@@ -60,7 +60,8 @@ class Graphite(object):
 
         for metric in report.graphite['metrics']:
             (metric, value, timestamp) = self.get_graphite_data(report, row, metric)
-            self.record(metric, value, timestamp)
+            if value is not None:
+                self.record(metric, value, timestamp)
 
     def get_graphite_data(self, report, row, metric):
         header = report.results['header']
