@@ -1,3 +1,3 @@
 reportupdater
 =============
-For documentation see: https://wikitech.wikimedia.org/wiki/Analytics/Reportupdater
+For documentation see: [Analytics/Systems/Reportupdater](https://wikitech.wikimedia.org/wiki/Analytics/Systems/Reportupdater)
