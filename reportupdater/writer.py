@@ -5,6 +5,7 @@
 
 
 import os
+import grp
 import io
 import csv
 import logging
@@ -153,10 +154,19 @@ class Writer(object):
             row[0] = row[0].strftime(DATE_FORMAT)
             tsv_writer.writerow(row)
         temp_output_file.close()
+
         try:
             os.rename(temp_output_path, output_path)
         except Exception, e:
             raise RuntimeError('Could not rename the output file (' + str(e) + ').')
+
+        # If a group has been specified, chgrp the report to it
+        if report.group:
+            gid = grp.getgrnam(str(report.group)).gr_gid
+            try:
+                os.chown(output_path, -1, gid)
+            except Exception, e:
+                raise RuntimeError('Could not change group ownership of the output file (' + str(e) + ').')
 
 
     def get_date_threshold(self, report, previous_data):

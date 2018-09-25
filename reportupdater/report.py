@@ -30,6 +30,7 @@ class Report(object):
         self.max_data_points = None
         self.graphite = {}
         self.results = {'header': [], 'data': {}}
+        self.group = None
 
 
     def __str__(self):
@@ -50,6 +51,7 @@ class Report(object):
             ' max_data_points=' + str(self.max_data_points) +
             ' graphite=' + str(self.graphite) +
             ' results=' + self.format_results(self.results) +
+            ' group=' + str(self.group) +
             '>'
         )
 

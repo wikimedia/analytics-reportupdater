@@ -62,6 +62,7 @@ class Reader(object):
         report.first_date = self.get_first_date(report_config)
         report.explode_by = self.get_explode_by(report_config, query_folder)
         report.max_data_points = self.get_max_data_points(report_config)
+        report.group = self.get_group(report_config)
         executable = self.get_executable(report_config) or report_key
         if report.type == 'sql':
             report.db_key = self.get_db_key(report_config)
@@ -189,3 +190,13 @@ class Reader(object):
         if not isinstance(graphite, dict):
             raise TypeError('Graphite is not a dict.')
         return graphite
+
+    def get_group(self, report_config):
+        group = None
+        if 'group' in report_config:
+            group = report_config['group']
+        elif 'defaults' in self.config and 'group' in self.config['defaults']:
+            group = self.config['defaults']['group']
+        if group is not None and not isinstance(group, str):
+            raise ValueError('Group is not a string.')
+        return group
