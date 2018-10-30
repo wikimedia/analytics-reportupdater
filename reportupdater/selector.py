@@ -14,7 +14,7 @@ from copy import deepcopy
 from datetime import datetime
 from dateutil.relativedelta import relativedelta
 from reader import Reader
-from utils import raise_critical, get_previous_results, get_increment
+from utils import raise_critical, get_previous_results, get_increment, DATE_FORMAT
 
 
 class Selector(object):
@@ -66,6 +66,9 @@ class Selector(object):
         previous_results = get_previous_results(
             report, output_folder, self.config['reruns'])
         already_done_dates = previous_results['data'].keys()
+        logging.debug('Already done dates: {}'.format(
+            [datetime.strftime(d, DATE_FORMAT) for d in sorted(already_done_dates)]
+        ))
 
         for start in self.get_all_start_dates(first_date, last_date, granularity_increment):
             if start not in already_done_dates:
