@@ -95,6 +95,10 @@ def only_instance_running(params):
             # Another instance run by another user is still executing.
             logging.warning('An instance run by another user was found.')
             return False
+        except Exception:
+            logging.error('Could not open or parse the pid file')
+            return False
+
         if pid_exists(pid):
             # Another instance is still executing.
             return False
