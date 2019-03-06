@@ -14,7 +14,7 @@ from copy import copy
 from datetime import datetime, date
 from selector import Selector
 from collections import defaultdict
-from utils import TIMESTAMP_FORMAT, DATE_FORMAT, raise_critical
+from utils import TIMESTAMP_FORMAT, DATE_FORMAT, raise_critical, get_mediawiki_host_and_port
 
 
 class Executor(object):
@@ -42,16 +42,25 @@ class Executor(object):
 
 
     def execute_sql_report(self, report):
-        if 'databases' not in self.config:
-            raise_critical(KeyError, 'Databases is not in config.')
-        if not isinstance(self.config['databases'], dict):
-            raise_critical(ValueError, 'Databases is not a dict.')
+        # Get connection key to allow for connection caching,
+        # depending on whether dynamic mediawiki dbs are used.
+        db_config = self.config['databases'][report.db_key]
+        if 'auto_find_db_shard' in db_config:
+            if db_config['wiki_db_placeholder']:
+                db_name = report.explode_by[db_config['wiki_db_placeholder']]
+            else:
+                db_name = db_config['db']
+            connection_key = 'mediawiki_dbs_' + db_name
+        else:
+            db_name = db_config['db']
+            connection_key = report.db_key
+
         try:
             sql_query = self.instantiate_sql(report)
             logging.debug(sql_query)
-            if report.db_key not in self.connections:
-                self.connections[report.db_key] = self.create_connection(report.db_key)
-            connection = self.connections[report.db_key]
+            if connection_key not in self.connections:
+                self.connections[connection_key] = self.create_connection(db_config, db_name)
+            connection = self.connections[connection_key]
             header, data = self.execute_sql(sql_query, connection)
             report.results = self.normalize_results(report, header, data)
             return True
@@ -74,41 +83,17 @@ class Executor(object):
             raise ValueError('SQL template contains unknown placeholders.')
 
 
-    def create_connection(self, db_key):
-        databases = self.config['databases']
-        if db_key not in databases:
-            raise KeyError('DB key is not in config databases.')
-        db_config = databases[db_key]
-        if not isinstance(db_config, dict):
-            raise ValueError('DB config is not a dict.')
-
-        if 'host' not in db_config:
-            raise KeyError('Host is not in DB config.')
-        if 'port' not in db_config:
-            raise KeyError('Port is not in DB config.')
-        if 'creds_file' not in db_config:
-            raise KeyError('Creds file is not in DB config.')
-        if 'db' not in db_config:
-            raise KeyError('DB name is not in DB config.')
-
-        db_host = db_config['host']
-        db_port = db_config['port']
-        db_creds_file = db_config['creds_file']
-        db_name = db_config['db']
-
-        if not isinstance(db_host, str):
-            raise ValueError('Host is not a string.')
-        if not isinstance(db_port, int):
-            raise ValueError('Port is not an integer.')
-        if not isinstance(db_creds_file, str):
-            raise ValueError('Creds file is not a string.')
-        if not isinstance(db_name, str):
-            raise ValueError('DB name is not a string.')
+    def create_connection(self, db_config, db_name):
+        if 'auto_find_db_shard' in db_config:
+            db_host, db_port = get_mediawiki_host_and_port(db_config, db_name)
+        else:
+            db_host = db_config['host']
+            db_port = db_config['port']
         try:
             return pymysql.connect(
                 host=db_host,
                 port=db_port,
-                read_default_file=db_creds_file,
+                read_default_file=db_config['creds_file'],
                 db=db_name,
                 autocommit=True,
                 charset='utf8',

@@ -68,78 +68,18 @@ class ExecutorTest(TestCase):
         self.assertEqual(sql_query, 'SOME sql WITH "wiki";')
 
 
-    def test_create_connection_when_db_key_is_not_in_db_config(self):
-        del self.config['databases'][self.db_key]
-        with self.assertRaises(KeyError):
-            self.executor.create_connection(self.db_key)
-
-
-    def test_create_connection_when_db_config_is_not_a_dict(self):
-        self.config['databases'][self.db_key] = 'not a dict'
-        with self.assertRaises(ValueError):
-            self.executor.create_connection(self.db_key)
-
-
-    def test_create_connection_when_host_is_not_in_config(self):
-        del self.db_config['host']
-        with self.assertRaises(KeyError):
-            self.executor.create_connection(self.db_key)
-
-
-    def test_create_connection_when_port_is_not_in_config(self):
-        del self.db_config['port']
-        with self.assertRaises(KeyError):
-            self.executor.create_connection(self.db_key)
-
-
-    def test_create_connection_when_creds_file_is_not_in_config(self):
-        del self.db_config['creds_file']
-        with self.assertRaises(KeyError):
-            self.executor.create_connection(self.db_key)
-
-
-    def test_create_connection_when_db_is_not_in_config(self):
-        del self.db_config['db']
-        with self.assertRaises(KeyError):
-            self.executor.create_connection(self.db_key)
-
-
-    def test_create_connection_when_host_is_not_a_string(self):
-        self.db_config['host'] = ('not', 'a', 'string')
-        with self.assertRaises(ValueError):
-            self.executor.create_connection(self.db_key)
-
-
-    def test_create_connection_when_port_is_not_an_integer(self):
-        self.db_config['port'] = ('not', 'an', 'integer')
-        with self.assertRaises(ValueError):
-            self.executor.create_connection(self.db_key)
-
-
-    def test_create_connection_when_creds_file_is_not_a_string(self):
-        self.db_config['creds_file'] = ('not', 'a', 'string')
-        with self.assertRaises(ValueError):
-            self.executor.create_connection(self.db_key)
-
-
-    def test_create_connection_when_db_is_not_a_string(self):
-        self.db_config['db'] = ('not', 'a', 'string')
-        with self.assertRaises(ValueError):
-            self.executor.create_connection(self.db_key)
-
-
     def test_create_connection_when_mysqldb_connect_raises_error(self):
         mysqldb_connect_stash = pymysql.connect
         pymysql.connect = MagicMock(side_effect=Exception())
         with self.assertRaises(RuntimeError):
-            self.executor.create_connection(self.db_key)
+            self.executor.create_connection(self.db_config, 'database')
         pymysql.connect = mysqldb_connect_stash
 
 
     def test_create_connection(self):
         mysqldb_connect_stash = pymysql.connect
         pymysql.connect = MagicMock(return_value='connection')
-        connection = self.executor.create_connection(self.db_key)
+        connection = self.executor.create_connection(self.db_config, 'database')
         self.assertEqual(connection, 'connection')
         pymysql.connect = mysqldb_connect_stash
 
@@ -168,12 +108,6 @@ class ExecutorTest(TestCase):
         del self.config['databases']
         with self.assertRaises(KeyError):
             list(self.executor.run())
-
-
-    def test_execut_sql_report_when_config_databases_is_not_a_dict(self):
-        self.config['databases'] = 'not a dict'
-        with self.assertRaises(ValueError):
-            list(self.executor.execute_sql_report(self.report))
 
 
     def test_run_when_helper_method_raises_error(self):

@@ -6,7 +6,9 @@
 import os
 import io
 import csv
+import glob
 import logging
+import dns.resolver
 from datetime import datetime
 from collections import defaultdict
 from dateutil.relativedelta import relativedelta
@@ -105,3 +107,49 @@ def get_increment(period, times=1):
         return relativedelta(months=times)
     else:
         raise ValueError('Period is not valid.')
+
+
+db_mapping = None
+def get_mediawiki_host_and_port(db_config, db_name):
+    global db_mapping
+    use_x1 = db_config.get('use_x1', False)
+    mw_config_path = db_config.get('mw_config_path', '/srv/mediawiki-config')
+
+    if not db_mapping:
+        db_mapping = get_mediawiki_section_dbname_mapping(mw_config_path, use_x1)
+    if not db_mapping:
+        raise RuntimeError("No database mapping found at {}. Have you configured correctly the mediawiki-config path?"
+                           .format(mw_config_path))
+    if db_name == 'staging':
+        shard = 'staging'
+    elif db_name == 'centralauth':
+        # The 'centralauth' db is a special case, not currently
+        # listed among the mediawiki-config's dblists. The more automated
+        # solution would be to parse db-eqiad.php in mediawiki-config, but it
+        # would add more complexity than what's necessary.
+        shard = 's7'
+    elif use_x1:
+        shard = 'x1'
+    else:
+        try:
+            shard = db_mapping[db_name]
+        except KeyError:
+            raise RuntimeError("The database {} is not listed among the dblist files of the supported sections."
+                               .format(db_name))
+    answers = dns.resolver.query('_' + shard + '-analytics._tcp.eqiad.wmnet', 'SRV')
+    host, port = str(answers[0].target).strip('.'), answers[0].port
+    return (host,port)
+
+
+def get_mediawiki_section_dbname_mapping(mw_config_path, use_x1):
+    db_mapping = {}
+    if use_x1:
+        dblist_section_paths = [mw_config_path.rstrip('/') + '/dblists/all.dblist']
+    else:
+        dblist_section_paths = glob.glob(mw_config_path.rstrip('/') + '/dblists/s[0-9]*.dblist')
+    for dblist_section_path in dblist_section_paths:
+        with open(dblist_section_path, 'r') as f:
+            for db in f.readlines():
+                db_mapping[db.strip()] = dblist_section_path.strip().rstrip('.dblist').split('/')[-1]
+
+    return db_mapping
