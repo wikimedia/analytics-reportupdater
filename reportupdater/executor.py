@@ -19,7 +19,6 @@ from utils import TIMESTAMP_FORMAT, DATE_FORMAT, raise_critical, get_mediawiki_h
 
 class Executor(object):
 
-
     def __init__(self, selector, config):
         if not isinstance(selector, Selector):
             raise_critical(ValueError, 'Selector is not valid.')
@@ -28,7 +27,6 @@ class Executor(object):
         self.selector = selector
         self.config = config
         self.connections = {}
-
 
     def run(self):
         for report in self.selector.run():
@@ -39,7 +37,6 @@ class Executor(object):
             elif report.type == 'script':
                 if self.execute_script_report(report):
                     yield report
-
 
     def execute_sql_report(self, report):
         # Get connection key to allow for connection caching,
@@ -70,7 +67,6 @@ class Executor(object):
             logging.error(message.format(report_key=report.key, error=str(e)))
             return False
 
-
     def instantiate_sql(self, report):
         values = {
             'from_timestamp': report.start.strftime(TIMESTAMP_FORMAT),
@@ -81,7 +77,6 @@ class Executor(object):
             return report.sql_template.format(**values)
         except KeyError:
             raise ValueError('SQL template contains unknown placeholders.')
-
 
     def create_connection(self, db_config, db_name):
         if 'auto_find_db_shard' in db_config:
@@ -102,7 +97,6 @@ class Executor(object):
         except Exception, e:
             raise RuntimeError('pymysql can not connect to database (' + str(e) + ').')
 
-
     def execute_sql(self, sql_query, connection):
         cursor = connection.cursor()
         try:
@@ -114,7 +108,6 @@ class Executor(object):
         finally:
             cursor.close()
         return header, data
-
 
     def execute_script_report(self, report):
         # prepare parameters for the call
@@ -141,7 +134,6 @@ class Executor(object):
             logging.error(message.format(report_key=report.key, error=str(e)))
             return False
         return True
-
 
     def normalize_results(self, report, header, data):
         normalized_header = copy(header)

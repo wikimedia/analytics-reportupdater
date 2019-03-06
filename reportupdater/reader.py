@@ -19,12 +19,10 @@ from utils import DATE_FORMAT, raise_critical
 
 class Reader(object):
 
-
     def __init__(self, config):
         if not isinstance(config, dict):
             raise_critical(ValueError, 'Config is not a dict.')
         self.config = config
-
 
     def run(self):
         if 'reports' not in self.config:
@@ -41,7 +39,6 @@ class Reader(object):
                 message = ('Report "{report_key}" could not be read from config '
                            'because of error: {error}')
                 logging.error(message.format(report_key=report_key, error=str(e)))
-
 
     def create_report(self, report_key, report_config):
         if not isinstance(report_key, str):
@@ -72,13 +69,11 @@ class Reader(object):
         report.graphite = self.get_graphite(report_config)
         return report
 
-
     def get_type(self, report_config):
         report_type = report_config.get('type', 'sql')
         if report_type not in ['sql', 'script']:
             raise ValueError('Report type is not valid.')
         return report_type
-
 
     def get_granularity(self, report_config):
         if 'granularity' not in report_config:
@@ -88,7 +83,6 @@ class Reader(object):
             raise ValueError('Report granularity is not valid.')
         return granularity
 
-
     def get_lag(self, report_config):
         if 'lag' not in report_config:
             return 0
@@ -97,10 +91,8 @@ class Reader(object):
             raise ValueError('Report lag is not valid.')
         return lag
 
-
     def get_is_funnel(self, report_config):
         return 'funnel' in report_config and report_config['funnel'] is True
-
 
     def get_first_date(self, report_config):
         if 'starts' in report_config:
@@ -118,7 +110,6 @@ class Reader(object):
         else:
             raise ValueError('Report does not specify starts.')
 
-
     def get_db_key(self, report_config):
         if 'db' in report_config:
             db_key = report_config['db']
@@ -132,7 +123,6 @@ class Reader(object):
             raise ValueError('DB key is not a string.')
         return db_key
 
-
     def get_sql_template(self, report_key, query_folder):
         sql_template_path = os.path.join(query_folder, report_key + '.sql')
         try:
@@ -141,10 +131,8 @@ class Reader(object):
         except IOError, e:
             raise IOError('Could not read the SQL template (' + str(e) + ').')
 
-
     def get_script(self, report_key, query_folder):
         return os.path.join(query_folder, report_key)
-
 
     def get_explode_by(self, report_config, query_folder):
         explode_by = {}
@@ -164,7 +152,6 @@ class Reader(object):
                     explode_by[placeholder] = values
         return explode_by
 
-
     def get_max_data_points(self, report_config):
         if 'max_data_points' not in report_config:
             return None
@@ -173,7 +160,6 @@ class Reader(object):
             raise ValueError('Max data points is not valid.')
         return max_data_points
 
-
     def get_executable(self, report_config):
         if 'execute' not in report_config:
             return None
@@ -181,7 +167,6 @@ class Reader(object):
         if not isinstance(execute, str):
             raise TypeError('Execute is not a string.')
         return execute
-
 
     def get_graphite(self, report_config):
         if 'graphite' not in report_config:

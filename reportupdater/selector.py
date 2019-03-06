@@ -19,7 +19,6 @@ from utils import raise_critical, get_previous_results, get_increment, DATE_FORM
 
 class Selector(object):
 
-
     def __init__(self, reader, config):
         if not isinstance(reader, Reader):
             raise_critical(ValueError, 'Reader is not valid.')
@@ -27,7 +26,6 @@ class Selector(object):
             raise_critical(ValueError, 'Config is not a dict.')
         self.reader = reader
         self.config = config
-
 
     def run(self):
         if 'current_exec_time' not in self.config:
@@ -46,7 +44,6 @@ class Selector(object):
                 message = ('Report "{report_key}" could not be triaged for execution '
                            'because of error: {error}')
                 logging.error(message.format(report_key=report.key, error=str(e)))
-
 
     def get_interval_reports(self, report, now):
         if 'output_folder' not in self.config:
@@ -77,7 +74,6 @@ class Selector(object):
                 report_copy.end = start + granularity_increment
                 yield report_copy
 
-
     def truncate_date(self, date, period):
         if period == 'hours':
             return date.replace(minute=0, second=0, microsecond=0)
@@ -93,7 +89,6 @@ class Selector(object):
         else:
             raise ValueError('Period is not valid.')
 
-
     def get_all_start_dates(self, first_date, current_date, increment):
         if first_date > current_date:
             raise ValueError('First date is greater than current date.')
@@ -103,7 +98,6 @@ class Selector(object):
         while current_start <= current_date:
             yield current_start
             current_start += increment
-
 
     def explode(self, report, visited=set([])):
         placeholders = set(report.explode_by.keys())

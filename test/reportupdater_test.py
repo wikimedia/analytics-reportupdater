@@ -5,7 +5,7 @@ import time
 import shutil
 import pymysql
 from reportupdater import reportupdater
-from reportupdater.utils import DATE_AND_TIME_FORMAT, DATE_FORMAT
+from reportupdater.utils import DATE_FORMAT
 from test_utils import ConnectionMock
 from unittest import TestCase
 from mock import MagicMock
@@ -16,7 +16,6 @@ from threading import Thread
 
 class ReportUpdaterTest(TestCase):
 
-
     def setUp(self):
         self.mysqldb_connect_stash = pymysql.connect
         self.utcnow_stash = reportupdater.utcnow
@@ -25,7 +24,6 @@ class ReportUpdaterTest(TestCase):
         self.output_folder = 'test/fixtures/output'
         self.pid_file_path = 'test/fixtures/queries/.reportupdater.pid'
         self.paths_to_clean = [self.pid_file_path]
-
 
     def tearDown(self):
         pymysql.connect = self.mysqldb_connect_stash
@@ -38,7 +36,6 @@ class ReportUpdaterTest(TestCase):
                     shutil.rmtree(path)
                 except:
                     pass
-
 
     def test_when_two_threads_run_reportupdater_in_parallel(self):
         # Mock database methods.
@@ -87,7 +84,6 @@ class ReportUpdaterTest(TestCase):
         output_path2 = os.path.join(self.output_folder, 'reportupdater_test2.tsv')
         self.assertFalse(os.path.exists(output_path2))
 
-
     def test_hourly_report_without_previous_results(self):
         def fetchall_callback():
             # This method will return a subsequent row with each call.
@@ -126,7 +122,6 @@ class ReportUpdaterTest(TestCase):
             self.assertEqual(line.strip(), expected_line)
             expected_date += relativedelta(days=+1)
             expected_value += 1
-
 
     def test_hourly_funnel_report_without_previous_results(self):
         def fetchall_callback():
@@ -171,7 +166,6 @@ class ReportUpdaterTest(TestCase):
                 expected_date += relativedelta(days=+1)
                 expected_value = 1
 
-
     def test_daily_report_with_previous_results(self):
         def fetchall_callback():
             # This method will return a subsequent row with each call.
@@ -214,7 +208,6 @@ class ReportUpdaterTest(TestCase):
             expected_date += relativedelta(months=+1)
             expected_value += 1
 
-
     def test_daily_report_without_previous_results_with_explode_by(self):
         def fetchall_callback():
             return [[datetime(2015, 1, 1), str(1)]]
@@ -249,7 +242,6 @@ class ReportUpdaterTest(TestCase):
             self.assertEqual(output_lines[0], 'date\tvalue\n')
             self.assertEqual(output_lines[1], '2015-01-01\t1\n')
 
-
     def test_daily_script_report_without_previous_results(self):
         config_path = os.path.join(self.config_folder, 'reportupdater_test5.yaml')
         reportupdater.run(
@@ -274,7 +266,6 @@ class ReportUpdaterTest(TestCase):
             self.assertEqual(date_str, expected_date_str)
             self.assertEqual(type(value), unicode)
             expected_date += relativedelta(days=+1)
-
 
     def test_daily_report_with_previous_results_and_reruns(self):
         def fetchall_callback():

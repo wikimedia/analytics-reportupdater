@@ -17,6 +17,7 @@ from dateutil.relativedelta import relativedelta
 DATE_FORMAT = '%Y-%m-%d'
 TIMESTAMP_FORMAT = '%Y%m%d%H%M%S'
 DATE_AND_TIME_FORMAT = '%Y-%m-%dT%H:%M:%S.%f'
+db_mapping = None
 
 
 def raise_critical(error_class, message):
@@ -109,7 +110,6 @@ def get_increment(period, times=1):
         raise ValueError('Period is not valid.')
 
 
-db_mapping = None
 def get_mediawiki_host_and_port(db_config, db_name):
     global db_mapping
     use_x1 = db_config.get('use_x1', False)
@@ -138,7 +138,7 @@ def get_mediawiki_host_and_port(db_config, db_name):
                                .format(db_name))
     answers = dns.resolver.query('_' + shard + '-analytics._tcp.eqiad.wmnet', 'SRV')
     host, port = str(answers[0].target).strip('.'), answers[0].port
-    return (host,port)
+    return (host, port)
 
 
 def get_mediawiki_section_dbname_mapping(mw_config_path, use_x1):

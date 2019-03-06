@@ -6,7 +6,6 @@ from reportupdater.selector import Selector
 from reportupdater.reader import Reader
 from reportupdater.report import Report
 from reportupdater.reportupdater import configure_graphite, load_config
-from reportupdater.utils import get_exploded_report_output_path
 from unittest import TestCase
 from datetime import datetime
 from mock import call, MagicMock
@@ -30,11 +29,9 @@ class GraphiteTest(TestCase):
         executor = Executor(selector, self.config)
         self.writer = Writer(executor, self.config, self.graphite)
 
-
     def tearDown(self):
         self.graphite.record = self.graphite_record_stash
         shutil.rmtree('test/fixtures/output/graphite_test1')
-
 
     def test_send_new_dates_to_graphite(self):
         self.report = Report()

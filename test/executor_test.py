@@ -11,11 +11,9 @@ from mock import MagicMock
 from datetime import datetime, date
 import pymysql
 import subprocess
-import os
 
 
 class ExecutorTest(TestCase):
-
 
     def setUp(self):
         self.db_key = 'executor_test'
@@ -45,12 +43,10 @@ class ExecutorTest(TestCase):
                                     'WHERE date >= {from_timestamp} '
                                     'AND date < {to_timestamp};')
 
-
     def test_instantiate_sql_when_format_raises_error(self):
         self.report.sql_template = 'SOME sql WITH AN {unknown} placeholder;'
         with self.assertRaises(ValueError):
             self.executor.instantiate_sql(self.report)
-
 
     def test_instantiate_sql(self):
         result = self.executor.instantiate_sql(self.report)
@@ -60,13 +56,11 @@ class ExecutorTest(TestCase):
         )
         self.assertEqual(result, expected)
 
-
     def test_instantiate_sql_when_exploded_by_wiki(self):
         self.report.explode_by = {'wiki': 'wiki'}
         self.report.sql_template = 'SOME sql WITH "{wiki}";'
         sql_query = self.executor.instantiate_sql(self.report)
         self.assertEqual(sql_query, 'SOME sql WITH "wiki";')
-
 
     def test_create_connection_when_mysqldb_connect_raises_error(self):
         mysqldb_connect_stash = pymysql.connect
@@ -75,7 +69,6 @@ class ExecutorTest(TestCase):
             self.executor.create_connection(self.db_config, 'database')
         pymysql.connect = mysqldb_connect_stash
 
-
     def test_create_connection(self):
         mysqldb_connect_stash = pymysql.connect
         pymysql.connect = MagicMock(return_value='connection')
@@ -83,14 +76,12 @@ class ExecutorTest(TestCase):
         self.assertEqual(connection, 'connection')
         pymysql.connect = mysqldb_connect_stash
 
-
     def test_execute_sql_when_mysqldb_execution_raises_error(self):
         def execute_callback(sql_query):
             raise Exception()
         connection = ConnectionMock(execute_callback, None, [])
         with self.assertRaises(RuntimeError):
             self.executor.execute_sql('SOME sql;', connection)
-
 
     def test_execute_sql(self):
         def fetchall_callback():
@@ -103,12 +94,10 @@ class ExecutorTest(TestCase):
         expected = ([], [[date(2015, 1, 1), '1'], [date(2015, 1, 2), '2']])
         self.assertEqual(result, expected)
 
-
     def test_run_when_databases_is_not_in_config(self):
         del self.config['databases']
         with self.assertRaises(KeyError):
             list(self.executor.run())
-
 
     def test_run_when_helper_method_raises_error(self):
         selected = [self.report]
@@ -116,7 +105,6 @@ class ExecutorTest(TestCase):
         self.executor.instantiate_sql = MagicMock(side_effect=Exception())
         executed = list(self.executor.run())
         self.assertEqual(len(executed), 0)
-
 
     def test_execute_script_report_simple_params(self):
         self.report.explode_by = {}
@@ -134,7 +122,6 @@ class ExecutorTest(TestCase):
         self.executor.execute_script_report(self.report)
         subprocess.Popen = subprocess_popen_stash
 
-
     def test_execute_script_report_extra_params(self):
         self.report.explode_by = {'param1': 'value1', 'param2': 'value2'}
 
@@ -151,14 +138,12 @@ class ExecutorTest(TestCase):
         self.executor.execute_script_report(self.report)
         subprocess.Popen = subprocess_popen_stash
 
-
     def test_execute_script_when_script_raises_error(self):
         subprocess_popen_stash = subprocess.Popen
         subprocess.Popen = MagicMock(side_effect=OSError())
         success = self.executor.execute_script_report(self.report)
         subprocess.Popen = subprocess_popen_stash
         self.assertEqual(success, False)
-
 
     def test_execute_script(self):
         class PopenReturnMock():
@@ -176,7 +161,6 @@ class ExecutorTest(TestCase):
         expected_data = {datetime(2015, 1, 1): [datetime(2015, 1, 1), '1']}
         self.assertEqual(self.report.results['data'], expected_data)
 
-
     def test_normalize_results_when_header_is_not_set(self):
         data = [['date', 'col1', 'col2'], ['2016-01-01', 1, 2]]
         results = self.executor.normalize_results(self.report, None, data)
@@ -188,7 +172,6 @@ class ExecutorTest(TestCase):
         }
         self.assertEqual(results, expected)
 
-
     def test_normalize_results_when_first_column_is_not_a_date(self):
         header = ['date', 'col1', 'col2']
         data = [
@@ -197,7 +180,6 @@ class ExecutorTest(TestCase):
         ]
         with self.assertRaises(ValueError):
             self.executor.normalize_results(self.report, header, data)
-
 
     def test_normalize_results_when_data_is_empty(self):
         header = ['date', 'col1', 'col2']
@@ -237,7 +219,6 @@ class ExecutorTest(TestCase):
             }
         }
         self.assertEqual(results, expected)
-
 
     def test_run(self):
         selected = [self.report]

@@ -6,7 +6,6 @@ from datetime import datetime
 
 class ReportTest(TestCase):
 
-
     def setUp(self):
         self.report = Report()
         self.report.key = 'report_test'
@@ -31,7 +30,6 @@ class ReportTest(TestCase):
             }
         }
 
-
     def test_str_does_not_raise_error_when_first_date_is_not_expected(self):
         self.report.first_date = None
         str(self.report)
@@ -39,7 +37,6 @@ class ReportTest(TestCase):
         str(self.report)
         self.report.first_date = {}
         str(self.report)
-
 
     def test_str_does_not_raise_error_when_start_is_not_expected(self):
         self.report.start = None
@@ -49,7 +46,6 @@ class ReportTest(TestCase):
         self.report.start = {}
         str(self.report)
 
-
     def test_str_does_not_raise_error_when_end_is_not_expected(self):
         self.report.end = None
         str(self.report)
@@ -57,7 +53,6 @@ class ReportTest(TestCase):
         str(self.report)
         self.report.end = {}
         str(self.report)
-
 
     def test_str_does_not_raise_error_when_results_is_not_expected(self):
         self.report.results = None

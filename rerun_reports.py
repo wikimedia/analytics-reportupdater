@@ -5,9 +5,7 @@ import io
 import sys
 import time
 import yaml
-import logging
 import argparse
-from reportupdater import reportupdater
 from datetime import datetime
 
 
@@ -83,7 +81,7 @@ def main():
     query_folder = args['query_folder']
     if not os.path.isdir(query_folder):
         critical('Invalid query_folder.')
-    
+
     # Check config.
     config_path = args['config_path']
     if config_path is None:

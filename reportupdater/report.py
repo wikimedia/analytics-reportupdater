@@ -13,7 +13,6 @@ from utils import DATE_FORMAT
 
 class Report(object):
 
-
     def __init__(self):
         self.key = None
         self.type = None
@@ -31,7 +30,6 @@ class Report(object):
         self.graphite = {}
         self.results = {'header': [], 'data': {}}
         self.group = None
-
 
     def __str__(self):
         return (
@@ -55,7 +53,6 @@ class Report(object):
             '>'
         )
 
-
     def format_date(self, to_format):
         if to_format:
             if isinstance(to_format, datetime):
@@ -64,7 +61,6 @@ class Report(object):
                 return 'invalid date'
         else:
             return str(None)
-
 
     def format_results(self, to_format):
         if not isinstance(to_format, dict):
@@ -76,7 +72,6 @@ class Report(object):
         else:
             data_lines = 'invalid data'
         return str({'header': header, 'data': data_lines})
-
 
     def format_sql(self, to_format):
         if to_format is None:

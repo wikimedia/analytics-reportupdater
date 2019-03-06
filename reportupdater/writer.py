@@ -18,7 +18,6 @@ from utils import (raise_critical, get_previous_results,
 
 class Writer(object):
 
-
     def __init__(self, executor, config, graphite=None):
         if not isinstance(executor, Executor):
             raise_critical(ValueError, 'Executor is not valid.')
@@ -28,7 +27,6 @@ class Writer(object):
         self.config = config
         self.graphite = graphite
 
-
     def get_output_folder(self):
         if 'output_folder' not in self.config:
             raise KeyError('Output folder is not in config.')
@@ -37,7 +35,6 @@ class Writer(object):
             raise ValueError('Output folder is not a string.')
 
         return output_folder
-
 
     def run(self):
         for report in self.executor.run():
@@ -52,7 +49,6 @@ class Writer(object):
                 message = ('Report "{report_key}" could not be written '
                            'because of error: {error}')
                 logging.error(message.format(report_key=report.key, error=str(e)))
-
 
     def update_results(self, report):
         """
@@ -126,7 +122,6 @@ class Writer(object):
 
         return updated_header, updated_data, new_dates
 
-
     def write_results(self, header, data, report, output_folder):
         dates = sorted(data.keys())
         rows = [data[date] for date in dates]
@@ -167,7 +162,6 @@ class Writer(object):
                 os.chown(output_path, -1, gid)
             except Exception, e:
                 raise RuntimeError('Could not change group ownership of the output file (' + str(e) + ').')
-
 
     def get_date_threshold(self, report, previous_data):
         if not report.max_data_points:
