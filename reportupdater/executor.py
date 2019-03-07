@@ -43,7 +43,7 @@ class Executor(object):
         # depending on whether dynamic mediawiki dbs are used.
         db_config = self.config['databases'][report.db_key]
         if 'auto_find_db_shard' in db_config:
-            if db_config['wiki_db_placeholder']:
+            if 'wiki_db_placeholder' in db_config:
                 db_name = report.explode_by[db_config['wiki_db_placeholder']]
             else:
                 db_name = db_config['db']
