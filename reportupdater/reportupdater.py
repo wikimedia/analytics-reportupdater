@@ -20,6 +20,7 @@ import io
 import errno
 import yaml
 import logging
+import sys
 from datetime import datetime
 from reader import Reader
 from selector import Selector
@@ -56,6 +57,7 @@ def run(**kwargs):
         logging.info('Execution complete.')
     else:
         logging.warning('Another instance is already running. Exiting.')
+        sys.exit(1)
 
 
 def get_params(passed_params):
@@ -168,9 +170,12 @@ def read_reruns(query_folder):
                     reruns = rerun_file.readlines()
                 parse_reruns(reruns, rerun_config)
                 rerun_files.append(rerun_path)
-            except:
+            except Exception, e:
                 logging.warning(
-                    'Rerun file %s could not be parsed and will be ignored.' % rerun_path
+                    'Rerun file {} could not be parsed and will be ignored.  Error: {}'.format(
+                        rerun_path,
+                        str(e),
+                    )
                 )
         return (rerun_config, rerun_files)
     else:
