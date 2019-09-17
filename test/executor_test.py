@@ -147,8 +147,8 @@ class ExecutorTest(TestCase):
 
     def test_execute_script(self):
         class PopenReturnMock():
-            def __init__(self):
-                self.stdout = ['date\tvalue', '2015-01-01\t1']
+            def communicate(self):
+                return (b'date\tvalue\n2015-01-01\t1', b'stderr_example')
 
         def subprocess_popen_mock(parameters, **kwargs):
             return PopenReturnMock()

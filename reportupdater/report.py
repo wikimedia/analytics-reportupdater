@@ -8,7 +8,7 @@
 
 import re
 from datetime import datetime
-from utils import DATE_FORMAT
+from .utils import DATE_FORMAT
 
 
 class Report(object):

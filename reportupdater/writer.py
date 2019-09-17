@@ -10,10 +10,10 @@ import io
 import csv
 import logging
 from copy import copy, deepcopy
-from executor import Executor
-from utils import (raise_critical, get_previous_results,
-                   DATE_FORMAT, get_exploded_report_output_path,
-                   get_increment)
+from .executor import Executor
+from .utils import (raise_critical, get_previous_results,
+                    DATE_FORMAT, get_exploded_report_output_path,
+                    get_increment)
 
 
 class Writer(object):
@@ -45,10 +45,10 @@ class Writer(object):
                 self.write_results(header, updated_data, report, self.get_output_folder())
                 self.record_to_graphite(report, new_dates)
                 logging.info('Report {report_key} has been updated.'.format(report_key=report.key))
-            except Exception, e:
+            except Exception as e:
                 message = ('Report "{report_key}" could not be written '
                            'because of error: {error}')
-                logging.error(message.format(report_key=report.key, error=str(e)))
+                logging.exception(message.format(report_key=report.key, error=str(e)))
 
     def update_results(self, report):
         """
@@ -140,8 +140,8 @@ class Writer(object):
 
         try:
             # wb mode needed to avoid unicode conflict between io and csv
-            temp_output_file = io.open(temp_output_path, 'wb')
-        except Exception, e:
+            temp_output_file = io.open(temp_output_path, 'w')
+        except Exception as e:
             raise RuntimeError('Could not open the temporary output file (' + str(e) + ').')
         tsv_writer = csv.writer(temp_output_file, delimiter='\t')
         tsv_writer.writerow(header)
@@ -152,7 +152,7 @@ class Writer(object):
 
         try:
             os.rename(temp_output_path, output_path)
-        except Exception, e:
+        except Exception as e:
             raise RuntimeError('Could not rename the output file (' + str(e) + ').')
 
         # If a group has been specified, chgrp the report to it
@@ -160,7 +160,7 @@ class Writer(object):
             gid = grp.getgrnam(str(report.group)).gr_gid
             try:
                 os.chown(output_path, -1, gid)
-            except Exception, e:
+            except Exception as e:
                 raise RuntimeError('Could not change group ownership of the output file (' + str(e) + ').')
 
     def get_date_threshold(self, report, previous_data):
@@ -169,7 +169,7 @@ class Writer(object):
         # Note that some older python-dateutil versions have
         # problems when multiplying relativedelta instances.
         increment = get_increment(report.granularity, report.max_data_points)
-        last_data_point = max(previous_data.keys() + [report.start])
+        last_data_point = max(list(previous_data.keys()) + [report.start])
         return last_data_point - increment
 
     def record_to_graphite(self, report, dates_to_send):

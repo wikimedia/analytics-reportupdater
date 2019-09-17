@@ -186,7 +186,7 @@ class ReportUpdaterTest(TestCase):
         config_path = os.path.join(self.config_folder, 'reportupdater_test2.yaml')
         output_path = os.path.join(self.output_folder, 'reportupdater_test2.tsv')
         with io.open(output_path, 'w') as output_file:
-            output_file.write(unicode('date\tvalue\n2015-01-01\t1\n2015-02-01\t2\n'))
+            output_file.write(str('date\tvalue\n2015-01-01\t1\n2015-02-01\t2\n'))
         self.paths_to_clean.extend([output_path])
         reportupdater.run(
             config_path=config_path,
@@ -264,7 +264,7 @@ class ReportUpdaterTest(TestCase):
             date_str, value = line.strip().split('\t')
             expected_date_str = expected_date.strftime(DATE_FORMAT)
             self.assertEqual(date_str, expected_date_str)
-            self.assertEqual(type(value), unicode)
+            self.assertEqual(type(value), str)
             expected_date += relativedelta(days=+1)
 
     def test_daily_report_with_previous_results_and_reruns(self):
@@ -287,7 +287,7 @@ class ReportUpdaterTest(TestCase):
         config_path = os.path.join(self.config_folder, 'reportupdater_test6.yaml')
         output_path = os.path.join(self.output_folder, 'reportupdater_test6.tsv')
         with io.open(output_path, 'w') as output_file:
-            output_file.write(unicode(
+            output_file.write(str(
                 'date\tvalue\n'
                 '2016-01-01\t1\n'
                 '2016-01-02\ta\n'  # Note irregular result.
@@ -302,14 +302,14 @@ class ReportUpdaterTest(TestCase):
         os.makedirs(rerun_folder)
         rerun_path1 = os.path.join(rerun_folder, 'reportupdater_test6.1')
         with io.open(rerun_path1, 'w') as rerun_file1:
-            rerun_file1.write(unicode(
+            rerun_file1.write(str(
                 '2016-01-02\n'
                 '2016-01-03\n'
                 'reportupdater_test6\n'
             ))
         rerun_path2 = os.path.join(rerun_folder, 'reportupdater_test6.2')
         with io.open(rerun_path2, 'w') as rerun_file2:
-            rerun_file2.write(unicode(
+            rerun_file2.write(str(
                 '2016-01-04\n'
                 '2016-01-05\n'
                 'reportupdater_test6\n'

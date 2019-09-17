@@ -3,7 +3,7 @@
 
 import time
 import socket
-from utils import raise_critical
+from .utils import raise_critical
 
 
 class Graphite(object):
@@ -69,7 +69,7 @@ class Graphite(object):
         data = report.explode_by
         # swap out any values that have lookups in the main graphite config
         # TODO: instead of using local files, work on a plugin system for reportupdater
-        for key, value in data.items():
+        for key, value in list(data.items()):
             if key in self.lookups:
                 data[key] = self.lookups[key].get(value, value)
         # add values from this row labeled by the header

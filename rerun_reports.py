@@ -58,11 +58,11 @@ def parse_date(args, arg_name):
 
 
 def format_date(d):
-    return unicode(d.strftime(DATE_FORMAT)) + u'\n'
+    return str(d.strftime(DATE_FORMAT)) + '\n'
 
 
 def format_report(r):
-    return unicode(r) + u'\n'
+    return str(r) + '\n'
 
 
 def main():
@@ -88,7 +88,7 @@ def main():
         config_path = os.path.join(query_folder, 'config.yaml')
     try:
         with io.open(config_path, encoding='utf-8') as config_file:
-            config = yaml.load(config_file)
+            config = yaml.safe_load(config_file)
     except IOError:
         critical('Cannot read the config file.')
 
@@ -100,7 +100,7 @@ def main():
     if type(reports_config) != dict:
         critical('Invalid report section in config file.')
     if reports is None:
-        reports = reports_config.keys()
+        reports = list(reports_config.keys())
     for report in reports:
         if report not in reports_config:
             critical('Report %s is not listed in config file.' % report)
@@ -126,7 +126,7 @@ def main():
         with io.open(rerun_path, 'w', encoding='utf-8') as rerun_file:
             rerun_file.writelines(
                 [format_date(start_date), format_date(end_date)] +
-                map(format_report, reports)
+                list(map(format_report, reports))
             )
     except IOError:
         critical('Could not write rerun file.')

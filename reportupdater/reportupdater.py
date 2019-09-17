@@ -22,12 +22,12 @@ import yaml
 import logging
 import sys
 from datetime import datetime
-from reader import Reader
-from selector import Selector
-from executor import Executor
-from writer import Writer
-from graphite import Graphite
-from utils import DATE_AND_TIME_FORMAT, DATE_FORMAT
+from .reader import Reader
+from .selector import Selector
+from .executor import Executor
+from .writer import Writer
+from .graphite import Graphite
+from .utils import DATE_FORMAT
 
 
 def run(**kwargs):
@@ -69,7 +69,7 @@ def get_params(passed_params):
         'output_folder': os.path.join(project_root, 'output'),
         'log_level': logging.WARNING
     }
-    passed_params = {k: v for k, v in passed_params.iteritems() if v is not None}
+    passed_params = {k: v for k, v in list(passed_params.items()) if v is not None}
     process_params.update(passed_params)
     process_params['query_folder'] = query_folder
     return process_params
@@ -134,22 +134,22 @@ def write_pid_file(params):
     logging.info('Writing the pid file.')
     pid = os.getpid()
     with io.open(params['pid_file_path'], 'w') as pid_file:
-        pid_file.write(unicode(pid))
+        pid_file.write(str(pid))
 
 
 def delete_pid_file(params):
     logging.info('Deleting the pid file.')
     try:
         os.remove(params['pid_file_path'])
-    except OSError, e:
+    except OSError as e:
         logging.error('Unable to delete the pid file (' + str(e) + ').')
 
 
 def load_config(config_path):
     try:
         with io.open(config_path, encoding='utf-8') as config_file:
-            return yaml.load(config_file)
-    except IOError, e:
+            return yaml.safe_load(config_file)
+    except IOError as e:
         raise IOError('Can not read the config file because of: (' + str(e) + ').')
 
 
@@ -158,7 +158,7 @@ def read_reruns(query_folder):
     if os.path.isdir(reruns_folder):
         try:
             rerun_candidates = os.listdir(reruns_folder)
-        except IOError, e:
+        except IOError as e:
             raise IOError('Can not read rerun folder because of: (' + str(e) + ').')
         rerun_config, rerun_files = {}, []
         for rerun_candidate in rerun_candidates:
@@ -170,7 +170,7 @@ def read_reruns(query_folder):
                     reruns = rerun_file.readlines()
                 parse_reruns(reruns, rerun_config)
                 rerun_files.append(rerun_path)
-            except Exception, e:
+            except Exception as e:
                 logging.warning(
                     'Rerun file {} could not be parsed and will be ignored.  Error: {}'.format(
                         rerun_path,
@@ -204,7 +204,7 @@ def configure_graphite(config):
     graphite = None
     if 'graphite' in config:
         # load any lookup dictionaries that Graphite metrics can use
-        for key, lookup in config['graphite'].get('lookups', {}).items():
+        for key, lookup in list(config['graphite'].get('lookups', {}).items()):
             path = os.path.join(config['query_folder'], lookup)
             config['graphite']['lookups'][key] = load_config(path)
         graphite = Graphite(config)

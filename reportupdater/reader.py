@@ -13,8 +13,8 @@ import os
 import io
 import logging
 from datetime import datetime, date
-from report import Report
-from utils import DATE_FORMAT, raise_critical
+from .report import Report
+from .utils import DATE_FORMAT, raise_critical
 
 
 class Reader(object):
@@ -30,12 +30,12 @@ class Reader(object):
         reports = self.config['reports']
         if not isinstance(reports, dict):
             raise_critical(ValueError, 'Reports is not a dict.')
-        for report_key, report_config in reports.iteritems():
+        for report_key, report_config in list(reports.items()):
             logging.debug('Reading "{report_key}"...'.format(report_key=report_key))
             try:
                 report = self.create_report(report_key, report_config)
                 yield report
-            except Exception, e:
+            except Exception as e:
                 message = ('Report "{report_key}" could not be read from config '
                            'because of error: {error}')
                 logging.error(message.format(report_key=report_key, error=str(e)))
@@ -128,7 +128,7 @@ class Reader(object):
         try:
             with io.open(sql_template_path, encoding='utf-8') as sql_template_file:
                 return sql_template_file.read()
-        except IOError, e:
+        except IOError as e:
             raise IOError('Could not read the SQL template (' + str(e) + ').')
 
     def get_script(self, report_key, query_folder):
@@ -137,7 +137,7 @@ class Reader(object):
     def get_explode_by(self, report_config, query_folder):
         explode_by = {}
         if 'explode_by' in report_config:
-            for placeholder, values_str in report_config['explode_by'].iteritems():
+            for placeholder, values_str in list(report_config['explode_by'].items()):
                 values = [value.strip() for value in values_str.split(',')]
                 if len(values) == 1:
                     explode_path = os.path.join(query_folder, values[0])

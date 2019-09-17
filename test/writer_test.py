@@ -322,7 +322,7 @@ class WriterTest(TestCase):
         # Set up previous results.
         # File can not be a permanent fixture, because it is overwritten be the test.
         with io.open(output_path, 'w') as output_file:
-            output_file.write(unicode('date\tvalue\n2015-01-01\ta\n2015-01-02\tb\n'))
+            output_file.write(str('date\tvalue\n2015-01-01\ta\n2015-01-02\tb\n'))
         # Set up current results.
         self.report.results['header'] = ['date', 'value']
         self.report.results['data'] = {

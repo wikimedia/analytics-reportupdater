@@ -13,8 +13,8 @@ import logging
 from copy import deepcopy
 from datetime import datetime
 from dateutil.relativedelta import relativedelta
-from reader import Reader
-from utils import raise_critical, get_previous_results, get_increment, DATE_FORMAT
+from .reader import Reader
+from .utils import raise_critical, get_previous_results, get_increment, DATE_FORMAT
 
 
 class Selector(object):
@@ -40,7 +40,7 @@ class Selector(object):
                 for exploded_report in self.explode(report):
                     for interval_report in self.get_interval_reports(exploded_report, now):
                         yield interval_report
-            except Exception, e:
+            except Exception as e:
                 message = ('Report "{report_key}" could not be triaged for execution '
                            'because of error: {error}')
                 logging.error(message.format(report_key=report.key, error=str(e)))
@@ -62,7 +62,7 @@ class Selector(object):
             first_date = max(first_date, last_date - jump_back)
         previous_results = get_previous_results(
             report, output_folder, self.config['reruns'])
-        already_done_dates = previous_results['data'].keys()
+        already_done_dates = list(previous_results['data'].keys())
         logging.debug('Already done dates: {}'.format(
             [datetime.strftime(d, DATE_FORMAT) for d in sorted(already_done_dates)]
         ))

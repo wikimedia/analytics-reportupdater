@@ -12,9 +12,9 @@ import csv
 import os
 from copy import copy
 from datetime import datetime, date
-from selector import Selector
+from .selector import Selector
 from collections import defaultdict
-from utils import TIMESTAMP_FORMAT, DATE_FORMAT, raise_critical, get_mediawiki_host_and_port
+from .utils import TIMESTAMP_FORMAT, DATE_FORMAT, raise_critical, get_mediawiki_host_and_port
 
 
 class Executor(object):
@@ -61,10 +61,10 @@ class Executor(object):
             header, data = self.execute_sql(sql_query, connection)
             report.results = self.normalize_results(report, header, data)
             return True
-        except Exception, e:
+        except Exception as e:
             message = ('Report "{report_key}" could not be executed '
                        'because of error: {error}')
-            logging.error(message.format(report_key=report.key, error=str(e)))
+            logging.exception(message.format(report_key=report.key, error=str(e)))
             return False
 
     def instantiate_sql(self, report):
@@ -94,7 +94,7 @@ class Executor(object):
                 charset='utf8',
                 use_unicode=True
             )
-        except Exception, e:
+        except Exception as e:
             raise RuntimeError('pymysql can not connect to database (' + str(e) + ').')
 
     def execute_sql(self, sql_query, connection):
@@ -103,7 +103,7 @@ class Executor(object):
             cursor.execute(sql_query)
             data = cursor.fetchall()
             header = [field[0] for field in cursor.description]
-        except Exception, e:
+        except Exception as e:
             raise RuntimeError('pymysql can not execute query (' + str(e) + ').')
         finally:
             cursor.close()
@@ -126,12 +126,13 @@ class Executor(object):
         try:
             # Execute the script, parse the results and normalize them.
             process = subprocess.Popen(parameters, stdout=subprocess.PIPE)
-            tsv_reader = csv.reader(process.stdout, delimiter='\t')
+            stdout, _ = process.communicate()
+            tsv_reader = csv.reader(stdout.decode().splitlines(), delimiter='\t')
             report.results = self.normalize_results(report, None, tsv_reader)
-        except Exception, e:
+        except Exception as e:
             message = ('Report "{report_key}" could not be executed '
                        'because of error: {error}')
-            logging.error(message.format(report_key=report.key, error=str(e)))
+            logging.exception(message.format(report_key=report.key, error=str(e)))
             return False
         return True
 

@@ -38,7 +38,7 @@ def get_previous_results(report, output_folder, reruns):
         try:
             with io.open(output_path, encoding='utf-8') as output_file:
                 rows = list(csv.reader(output_file, delimiter='\t'))
-        except IOError, e:
+        except IOError as e:
             raise IOError('Could not read the output file (' + str(e) + ').')
         header = []
         if report.is_funnel:
