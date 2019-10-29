@@ -101,5 +101,5 @@ class Graphite(object):
 
         sock = socket.socket()
         sock.connect((self.host, int(self.port)))
-        sock.send('{} {} {}\n'.format(metric, value, timestamp))
+        sock.send('{} {} {}\n'.format(metric, value, timestamp).encode('utf-8'))
         sock.close()
