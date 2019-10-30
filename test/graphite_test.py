@@ -20,9 +20,7 @@ class GraphiteTest(TestCase):
         self.config['output_folder'] = 'test/fixtures/output'
         self.config['reruns'] = {}
 
-        # FIXME: This should be done using mock.patch
         self.graphite = configure_graphite(self.config)
-        self.graphite_record_stash = self.graphite.record
         self.graphite.record = MagicMock()
 
         reader = Reader(self.config)
@@ -31,7 +29,6 @@ class GraphiteTest(TestCase):
         self.writer = Writer(executor, self.config, self.graphite)
 
     def tearDown(self):
-        self.graphite.record = self.graphite_record_stash
         shutil.rmtree('test/fixtures/output/graphite_test1')
 
     def test_send_new_dates_to_graphite(self):

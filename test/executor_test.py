@@ -7,10 +7,8 @@ from reportupdater.utils import TIMESTAMP_FORMAT
 from test_utils import ConnectionMock
 from reportupdater.utils import DATE_FORMAT
 from unittest import TestCase
-from mock import MagicMock
+from mock import MagicMock, patch
 from datetime import datetime, date
-import pymysql
-import subprocess
 
 
 class ExecutorTest(TestCase):
@@ -63,18 +61,14 @@ class ExecutorTest(TestCase):
         self.assertEqual(sql_query, 'SOME sql WITH "wiki";')
 
     def test_create_connection_when_mysqldb_connect_raises_error(self):
-        mysqldb_connect_stash = pymysql.connect
-        pymysql.connect = MagicMock(side_effect=Exception())
-        with self.assertRaises(RuntimeError):
-            self.executor.create_connection(self.db_config, 'database')
-        pymysql.connect = mysqldb_connect_stash
+        with patch('pymysql.connect', side_effect=Exception()):
+            with self.assertRaises(RuntimeError):
+                self.executor.create_connection(self.db_config, 'database')
 
     def test_create_connection(self):
-        mysqldb_connect_stash = pymysql.connect
-        pymysql.connect = MagicMock(return_value='connection')
-        connection = self.executor.create_connection(self.db_config, 'database')
+        with patch('pymysql.connect', return_value='connection'):
+            connection = self.executor.create_connection(self.db_config, 'database')
         self.assertEqual(connection, 'connection')
-        pymysql.connect = mysqldb_connect_stash
 
     def test_execute_sql_when_mysqldb_execution_raises_error(self):
         def execute_callback(sql_query):
@@ -117,10 +111,8 @@ class ExecutorTest(TestCase):
             self.assertEqual(parameters[1], self.report.start.strftime(DATE_FORMAT))
             self.assertEqual(parameters[2], self.report.end.strftime(DATE_FORMAT))
             return PopenReturnMock()
-        subprocess_popen_stash = subprocess.Popen
-        subprocess.Popen = MagicMock(wraps=subprocess_popen_mock)
-        self.executor.execute_script_report(self.report)
-        subprocess.Popen = subprocess_popen_stash
+        with patch('subprocess.Popen', wraps=subprocess_popen_mock):
+            self.executor.execute_script_report(self.report)
 
     def test_execute_script_report_extra_params(self):
         self.report.explode_by = {'param1': 'value1', 'param2': 'value2'}
@@ -133,16 +125,12 @@ class ExecutorTest(TestCase):
             self.assertEqual(parameters[3], 'value1')
             self.assertEqual(parameters[4], 'value2')
             return PopenReturnMock()
-        subprocess_popen_stash = subprocess.Popen
-        subprocess.Popen = MagicMock(wraps=subprocess_popen_mock)
-        self.executor.execute_script_report(self.report)
-        subprocess.Popen = subprocess_popen_stash
+        with patch('subprocess.Popen', wraps=subprocess_popen_mock):
+            self.executor.execute_script_report(self.report)
 
     def test_execute_script_when_script_raises_error(self):
-        subprocess_popen_stash = subprocess.Popen
-        subprocess.Popen = MagicMock(side_effect=OSError())
-        success = self.executor.execute_script_report(self.report)
-        subprocess.Popen = subprocess_popen_stash
+        with patch('subprocess.Popen', side_effect=OSError()):
+            success = self.executor.execute_script_report(self.report)
         self.assertEqual(success, False)
 
     def test_execute_script(self):
@@ -152,10 +140,8 @@ class ExecutorTest(TestCase):
 
         def subprocess_popen_mock(parameters, **kwargs):
             return PopenReturnMock()
-        subprocess_popen_stash = subprocess.Popen
-        subprocess.Popen = MagicMock(wraps=subprocess_popen_mock)
-        success = self.executor.execute_script_report(self.report)
-        subprocess.Popen = subprocess_popen_stash
+        with patch('subprocess.Popen', wraps=subprocess_popen_mock):
+            success = self.executor.execute_script_report(self.report)
         self.assertEqual(success, True)
         self.assertEqual(self.report.results['header'], ['date', 'value'])
         expected_data = {datetime(2015, 1, 1): [datetime(2015, 1, 1), '1']}

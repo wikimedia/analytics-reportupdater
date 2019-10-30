@@ -10,7 +10,7 @@ from reportupdater.report import Report
 from reportupdater.utils import get_exploded_report_output_path
 from unittest import TestCase
 from datetime import datetime
-from mock import MagicMock
+from mock import MagicMock, patch
 
 
 class WriterTest(TestCase):
@@ -35,8 +35,6 @@ class WriterTest(TestCase):
             }
         }
 
-        self.io_open_stash = io.open
-        self.os_rename_stash = os.rename
         self.paths_to_clean = []
 
         with open('test/fixtures/output/writer_test_header_change.tsv', 'w') as second_test:
@@ -48,8 +46,6 @@ class WriterTest(TestCase):
             os.remove('test/fixtures/output/writer_test_header_change.tsv')
         except:
             pass
-        io.open = self.io_open_stash
-        os.rename = self.os_rename_stash
         for path in self.paths_to_clean:
             try:
                 os.remove(path)
@@ -59,16 +55,16 @@ class WriterTest(TestCase):
                 except:
                     pass
 
-    def test_write_results_when_io_open_raises_error(self):
-        io.open = MagicMock(side_effect=Exception())
+    @patch('io.open', side_effect=Exception())
+    def test_write_results_when_io_open_raises_error(self, *_):
         header = self.report.results['header']
         data = self.report.results['data']
         output_folder = self.config['output_folder']
         with self.assertRaises(RuntimeError):
             self.writer.write_results(header, data, self.report, output_folder)
 
-    def test_write_results_when_os_rename_raises_error(self):
-        os.rename = MagicMock(side_effect=Exception())
+    @patch('os.rename', side_effect=Exception())
+    def test_write_results_when_os_rename_raises_error(self, *_):
         header = self.report.results['header']
         data = self.report.results['data']
         output_folder = self.config['output_folder']
