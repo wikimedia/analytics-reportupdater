@@ -12,6 +12,7 @@ from dateutil.relativedelta import relativedelta
 from threading import Thread
 
 
+@mock.patch('reportupdater.reportupdater.utcnow', return_value=datetime(2015, 5, 3))
 class ReportUpdaterTest(TestCase):
 
     def setUp(self):
@@ -31,7 +32,7 @@ class ReportUpdaterTest(TestCase):
                 except:
                     pass
 
-    def test_when_two_threads_run_reportupdater_in_parallel(self):
+    def test_when_two_threads_run_reportupdater_in_parallel(self, *_):
         # Mock database methods.
         def fetchall_callback():
             return []
@@ -79,7 +80,7 @@ class ReportUpdaterTest(TestCase):
             output_path2 = os.path.join(self.output_folder, 'reportupdater_test2.tsv')
             self.assertFalse(os.path.exists(output_path2))
 
-    def test_hourly_report_without_previous_results(self):
+    def test_hourly_report_without_previous_results(self, *_):
         def fetchall_callback():
             # This method will return a subsequent row with each call.
             try:
@@ -118,7 +119,7 @@ class ReportUpdaterTest(TestCase):
                 expected_date += relativedelta(days=+1)
                 expected_value += 1
 
-    def test_hourly_funnel_report_without_previous_results(self):
+    def test_hourly_funnel_report_without_previous_results(self, *_):
         def fetchall_callback():
             # This method will return a subsequent row with each call.
             try:
@@ -161,7 +162,7 @@ class ReportUpdaterTest(TestCase):
                     expected_date += relativedelta(days=+1)
                     expected_value = 1
 
-    def test_daily_report_with_previous_results(self):
+    def test_daily_report_with_previous_results(self, *_):
         def fetchall_callback():
             # This method will return a subsequent row with each call.
             try:
@@ -203,7 +204,7 @@ class ReportUpdaterTest(TestCase):
                 expected_date += relativedelta(months=+1)
                 expected_value += 1
 
-    def test_daily_report_without_previous_results_with_explode_by(self):
+    def test_daily_report_without_previous_results_with_explode_by(self, *_):
         def fetchall_callback():
             return [[datetime(2015, 1, 1), str(1)]]
         header = ['date', 'value']
@@ -237,7 +238,7 @@ class ReportUpdaterTest(TestCase):
                 self.assertEqual(output_lines[0], 'date\tvalue\n')
                 self.assertEqual(output_lines[1], '2015-01-01\t1\n')
 
-    def test_daily_script_report_without_previous_results(self):
+    def test_daily_script_report_without_previous_results(self, *_):
         config_path = os.path.join(self.config_folder, 'reportupdater_test5.yaml')
         reportupdater.run(
             config_path=config_path,
@@ -262,7 +263,9 @@ class ReportUpdaterTest(TestCase):
             self.assertEqual(type(value), str)
             expected_date += relativedelta(days=+1)
 
-    def test_daily_report_with_previous_results_and_reruns(self):
+    def test_daily_report_with_previous_results_and_reruns(self, mock_utcnow):
+        mock_utcnow.return_value = datetime(2016, 1, 8)
+
         def fetchall_callback():
             # This method will return a subsequent row with each call.
             try:
@@ -285,9 +288,9 @@ class ReportUpdaterTest(TestCase):
                 output_file.write(str(
                     'date\tvalue\n'
                     '2016-01-01\t1\n'
-                    '2016-01-02\ta\n'  # Note irregular result.
+                    '2016-01-02\ta\n'  # Note irregular result, this will be overwritten.
                     '2016-01-03\t3\n'
-                    '2016-01-04\tb\n'  # Note irregular result.
+                    '2016-01-04\tb\n'  # Note irregular result, this will be overwritten.
                     '2016-01-05\t5\n'
                 ))
             self.paths_to_clean.extend([output_path])
