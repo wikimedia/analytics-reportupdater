@@ -91,7 +91,8 @@ class Selector(object):
 
     def get_all_start_dates(self, first_date, current_date, increment):
         if first_date > current_date:
-            raise ValueError('First date is greater than current date.')
+            logging.warning('Start date is greater than current date, skipping report.')
+            return
         if increment.days < 0 or increment.months < 0:
             raise ValueError('Increment is negative.')
         current_start = first_date

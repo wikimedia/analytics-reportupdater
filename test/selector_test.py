@@ -131,8 +131,8 @@ class SelectorTest(TestCase):
         first_date = datetime(2015, 1, 2)
         current_date = datetime(2015, 1, 1)
         increment = relativedelta(days=1)
-        with self.assertRaises(ValueError):
-            list(self.selector.get_all_start_dates(first_date, current_date, increment))
+        all_dates = list(self.selector.get_all_start_dates(first_date, current_date, increment))
+        self.assertEqual(all_dates, [])
 
     def test_get_all_start_dates_when_increment_is_negative(self):
         first_date = datetime(2015, 1, 1)
