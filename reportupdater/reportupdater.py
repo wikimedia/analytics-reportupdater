@@ -183,7 +183,7 @@ def read_reruns(query_folder):
 
 
 def parse_reruns(lines, rerun_config):
-    values = [l.strip() for l in lines]
+    values = [line.strip() for line in lines]
     start_date = datetime.strptime(values[0], DATE_FORMAT)
     end_date = datetime.strptime(values[1], DATE_FORMAT)
     for report in values[2:]:
