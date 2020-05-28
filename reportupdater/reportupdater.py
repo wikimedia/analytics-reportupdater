@@ -95,10 +95,10 @@ def only_instance_running(params):
         except IOError:
             # Permission error.
             # Another instance run by another user is still executing.
-            logging.warning('An instance run by another user was found.')
+            logging.exception('An instance run by another user was found.')
             return False
         except Exception:
-            logging.error('Could not open or parse the pid file')
+            logging.exception('Could not open or parse the pid file ' + params['pid_file_path'])
             return False
 
         if pid_exists(pid):
