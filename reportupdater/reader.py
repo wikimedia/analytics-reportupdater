@@ -17,6 +17,10 @@ from .report import Report
 from .utils import DATE_FORMAT, raise_critical
 
 
+class NoDefaultValue:
+    pass
+
+
 class Reader(object):
 
     def __init__(self, config):
@@ -69,56 +73,54 @@ class Reader(object):
         report.graphite = self.get_graphite(report_config)
         return report
 
+    def get_value(self, key, report_config, global_default):
+        defaults = self.config.get('defaults', {})
+        if key in report_config:
+            value = report_config[key]
+        elif key in defaults:
+            value = defaults[key]
+        elif not isinstance(global_default, NoDefaultValue):
+            value = global_default
+        else:
+            raise KeyError('Key {} must be specified in defaults or report config {}'.format(key, report_config))
+        return value
+
     def get_type(self, report_config):
-        report_type = report_config.get('type', 'sql')
+        report_type = self.get_value('type', report_config, 'sql')
         if report_type not in ['sql', 'script']:
             raise ValueError('Report type is not valid.')
         return report_type
 
     def get_granularity(self, report_config):
-        if 'granularity' not in report_config:
-            raise KeyError('Report granularity is not specified.')
-        granularity = report_config['granularity']
+        granularity = self.get_value('granularity', report_config, NoDefaultValue())
         if granularity not in ['days', 'weeks', 'months']:
             raise ValueError('Report granularity is not valid.')
         return granularity
 
     def get_lag(self, report_config):
-        if 'lag' not in report_config:
-            return 0
-        lag = report_config['lag']
+        lag = self.get_value('lag', report_config, 0)
         if type(lag) != int or lag < 0:
             raise ValueError('Report lag is not valid.')
         return lag
 
     def get_is_funnel(self, report_config):
-        return 'funnel' in report_config and report_config['funnel'] is True
+        return self.get_value('funnel', report_config, False)
 
     def get_first_date(self, report_config):
-        if 'starts' in report_config:
-            first_date = report_config['starts']
-            if isinstance(first_date, date):
-                first_date = datetime(first_date.year, first_date.month, first_date.day)
-            else:
-                try:
-                    first_date = datetime.strptime(first_date, DATE_FORMAT)
-                except TypeError:
-                    raise TypeError('Report starts is not a string.')
-                except ValueError:
-                    raise ValueError('Report starts does not match date format')
-            return first_date
+        first_date = self.get_value('starts', report_config, NoDefaultValue())
+        if isinstance(first_date, date):
+            first_date = datetime(first_date.year, first_date.month, first_date.day)
         else:
-            raise ValueError('Report does not specify starts.')
+            try:
+                first_date = datetime.strptime(first_date, DATE_FORMAT)
+            except TypeError:
+                raise TypeError('Report starts is not a string.')
+            except ValueError:
+                raise ValueError('Report starts does not match date format')
+        return first_date
 
     def get_db_key(self, report_config):
-        if 'db' in report_config:
-            db_key = report_config['db']
-        elif 'defaults' not in self.config:
-            raise KeyError('Defaults is not in config.')
-        elif 'db' not in self.config['defaults']:
-            raise KeyError('DB default is not in defaults config.')
-        else:
-            db_key = self.config['defaults']['db']
+        db_key = self.get_value('db', report_config, NoDefaultValue())
         if not isinstance(db_key, str):
             raise ValueError('DB key is not a string.')
         return db_key
@@ -135,53 +137,46 @@ class Reader(object):
         return os.path.join(query_folder, report_key)
 
     def get_explode_by(self, report_config, query_folder):
+        explode_by_value = self.get_value('explode_by', report_config, {})
         explode_by = {}
-        if 'explode_by' in report_config:
-            for placeholder, values_str in list(report_config['explode_by'].items()):
-                values = [value.strip() for value in values_str.split(',')]
-                if len(values) == 1:
-                    explode_path = os.path.join(query_folder, values[0])
-                    try:
-                        with io.open(explode_path, encoding='utf-8') as explode_file:
-                            read_values = [v.strip() for v in explode_file.readlines()]
-                        if (len(read_values) > 0):
-                            explode_by[placeholder] = read_values
-                    except IOError:
-                        explode_by[placeholder] = values
-                elif len(values) > 1:
+        for placeholder, values_str in list(explode_by_value.items()):
+            values = [value.strip() for value in values_str.split(',')]
+            if len(values) == 1:
+                explode_path = os.path.join(query_folder, values[0])
+                try:
+                    with io.open(explode_path, encoding='utf-8') as explode_file:
+                        read_values = [v.strip() for v in explode_file.readlines()]
+                    if (len(read_values) > 0):
+                        explode_by[placeholder] = read_values
+                except IOError:
                     explode_by[placeholder] = values
+            elif len(values) > 1:
+                explode_by[placeholder] = values
         return explode_by
 
     def get_max_data_points(self, report_config):
-        if 'max_data_points' not in report_config:
-            return None
-        max_data_points = report_config['max_data_points']
-        if type(max_data_points) != int or max_data_points < 1:
-            raise ValueError('Max data points is not valid.')
+        max_data_points = self.get_value('max_data_points', report_config, None)
+        if max_data_points is not None:
+            if type(max_data_points) != int or max_data_points < 1:
+                raise ValueError('Max data points is not valid.')
         return max_data_points
 
     def get_executable(self, report_config):
-        if 'execute' not in report_config:
-            return None
-        execute = report_config['execute']
-        if not isinstance(execute, str):
-            raise TypeError('Execute is not a string.')
+        execute = self.get_value('execute', report_config, None)
+        if execute is not None:
+            if not isinstance(execute, str):
+                raise TypeError('Execute is not a string.')
         return execute
 
     def get_graphite(self, report_config):
-        if 'graphite' not in report_config:
-            return {}
-        graphite = report_config['graphite']
+        graphite = self.get_value('graphite', report_config, {})
         if not isinstance(graphite, dict):
             raise TypeError('Graphite is not a dict.')
         return graphite
 
     def get_group(self, report_config):
-        group = None
-        if 'group' in report_config:
-            group = report_config['group']
-        elif 'defaults' in self.config and 'group' in self.config['defaults']:
-            group = self.config['defaults']['group']
-        if group is not None and not isinstance(group, str):
-            raise ValueError('Group is not a string.')
+        group = self.get_value('group', report_config, None)
+        if group is not None:
+            if not isinstance(group, str):
+                raise ValueError('Group is not a string.')
         return group

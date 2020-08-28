@@ -49,18 +49,53 @@ class ReaderTest(TestCase):
         with self.assertRaises(KeyError):
             self.reader.get_granularity(report_config)
 
-    def test_get_granularity_when_value_is_not_valid(self):
-        report_config = {
-            'granularity': 'wrong'
-        }
-        with self.assertRaises(ValueError):
-            self.reader.get_granularity(report_config)
-
-    def test_get_granularity(self):
+    def test_get_granularity_when_in_report_config(self):
         for granularity in ['days', 'weeks', 'months']:
             report_config = {'granularity': granularity}
-            result = self.reader.get_granularity(report_config)
+            reader = Reader({})
+            result = reader.get_granularity(report_config)
             self.assertEqual(result, granularity)
+
+    def test_get_granularity_when_report_config_granularity_is_not_valid(self):
+        report_config = {'granularity': 'wrong'}
+        reader = Reader({})
+        with self.assertRaises(ValueError):
+            reader.get_granularity(report_config)
+
+    def test_get_granularity_when_defaults_is_not_in_config(self):
+        report_config = {}
+        reader = Reader({})
+        with self.assertRaises(KeyError):
+            reader.get_granularity(report_config)
+
+    def test_get_granularity_when_defaults_granularity_is_not_in_config(self):
+        config = {'defaults': {}}
+        report_config = {}
+        reader = Reader(config)
+        with self.assertRaises(KeyError):
+            reader.get_granularity(report_config)
+
+    def test_get_granularity_when_defaults_granularity_is_not_valid(self):
+        config = {
+            'defaults': {
+                'granularity': 'wrong'
+            }
+        }
+        report_config = {}
+        reader = Reader(config)
+        with self.assertRaises(ValueError):
+            reader.get_granularity(report_config)
+
+    def test_get_granularity_when_in_defaults(self):
+        config = {
+            'defaults': {
+                'granularity': 'weeks'
+            }
+        }
+        report_config = {}
+        result = Reader(config).get_granularity(report_config)
+        expected = 'weeks'
+        self.assertEqual(result, expected)
 
     def test_get_lag_when_value_is_not_in_config(self):
         report_config = {}
@@ -108,7 +143,7 @@ class ReaderTest(TestCase):
 
     def test_get_first_date_when_report_starts_is_not_in_config(self):
         report_config = {}
-        with self.assertRaises(ValueError):
+        with self.assertRaises(KeyError):
             self.reader.get_first_date(report_config)
 
     def test_get_first_date(self):
