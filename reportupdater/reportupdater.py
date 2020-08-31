@@ -17,10 +17,9 @@
 
 import os
 import io
-import errno
 import yaml
 import logging
-import sys
+from pid import PidFile, PidFileError
 from datetime import datetime
 from .reader import Reader
 from .selector import Selector
@@ -34,37 +33,34 @@ def run(**kwargs):
     params = get_params(kwargs)
     configure_logging(params)
 
-    if only_instance_running(params):
-        logging.info('Starting execution.')
-        write_pid_file(params)  # create lock to avoid concurrent executions
+    try:
+        with PidFile(get_pidfile_key(params['query_folder'])):
+            logging.info('Starting execution.')
 
-        current_exec_time = utcnow()
+            current_exec_time = utcnow()
 
-        config = load_config(params['config_path'])
-        config['current_exec_time'] = current_exec_time
-        config['query_folder'] = params['query_folder']
-        config['output_folder'] = params['output_folder']
-        config['reruns'], rerun_files = read_reruns(params['query_folder'])
+            config = load_config(params['config_path'])
+            config['current_exec_time'] = current_exec_time
+            config['query_folder'] = params['query_folder']
+            config['output_folder'] = params['output_folder']
+            config['reruns'], rerun_files = read_reruns(params['query_folder'])
 
-        reader = Reader(config)
-        selector = Selector(reader, config)
-        executor = Executor(selector, config)
-        writer = Writer(executor, config, configure_graphite(config))
-        writer.run()
+            reader = Reader(config)
+            selector = Selector(reader, config)
+            executor = Executor(selector, config)
+            writer = Writer(executor, config, configure_graphite(config))
+            writer.run()
 
-        delete_reruns(rerun_files)  # delete rerun files that have been processed
-        delete_pid_file(params)  # free lock for other instances to execute
-        logging.info('Execution complete.')
-    else:
-        logging.warning('Another instance is already running. Exiting.')
-        sys.exit(1)
+            delete_reruns(rerun_files)  # delete rerun files that have been processed
+            logging.info('Execution complete.')
+    except PidFileError:
+        logging.warning('A job with folder {} is already running, exiting successfully.'.format(params['query_folder']))
 
 
 def get_params(passed_params):
     project_root = os.path.join(os.path.dirname(os.path.realpath(__file__)), '..')
     query_folder = passed_params.pop('query_folder', os.path.join(project_root, 'queries'))
     process_params = {
-        'pid_file_path': os.path.join(query_folder, '.reportupdater.pid'),
         'config_path': os.path.join(query_folder, 'config.yaml'),
         'output_folder': os.path.join(project_root, 'output'),
         'log_level': logging.WARNING
@@ -87,62 +83,8 @@ def configure_logging(params):
     logger.setLevel(params['log_level'])
 
 
-def only_instance_running(params):
-    if os.path.isfile(params['pid_file_path']):
-        try:
-            with io.open(params['pid_file_path'], 'r') as pid_file:
-                pid = int(pid_file.read().strip())
-        except IOError:
-            # Permission error.
-            # Another instance run by another user is still executing.
-            logging.exception('An instance run by another user was found.')
-            return False
-        except Exception:
-            logging.exception('Could not open or parse the pid file ' + params['pid_file_path'])
-            return False
-
-        if pid_exists(pid):
-            # Another instance is still executing.
-            return False
-        else:
-            # Another instance terminated unexpectedly,
-            # leaving the stale pid file there.
-            return True
-    else:
-        return True
-
-
-def pid_exists(pid):
-    try:
-        # Sending signal 0 to a pid will raise an OSError exception
-        # if the pid is not running, and do nothing otherwise.
-        os.kill(pid, 0)
-    except OSError as err:
-        if err.errno == errno.ESRCH:
-            # No such process.
-            return False
-        elif err.errno == errno.EPERM:
-            # Valid process, no permits.
-            return True
-        else:
-            raise
-    else:
-        return True
-
-
-def write_pid_file(params):
-    logging.info('Writing the pid file.')
-    pid = os.getpid()
-    with io.open(params['pid_file_path'], 'w') as pid_file:
-        pid_file.write(str(pid))
-
-
-def delete_pid_file(params):
-    logging.info('Deleting the pid file.')
-    try:
-        os.remove(params['pid_file_path'])
-    except OSError as e:
-        logging.error('Unable to delete the pid file (' + str(e) + ').')
+def get_pidfile_key(query_folder):
+    return 'reportupdater-{}'.format(os.path.abspath(query_folder).replace(os.path.sep, '-'))
 
 
 def load_config(config_path):
