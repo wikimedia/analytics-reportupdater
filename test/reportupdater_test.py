@@ -19,8 +19,7 @@ class ReportUpdaterTest(TestCase):
         self.config_folder = 'test/fixtures/config'
         self.query_folder = 'test/fixtures/queries'
         self.output_folder = 'test/fixtures/output'
-        self.pid_file_path = 'test/fixtures/queries/.reportupdater.pid'
-        self.paths_to_clean = [self.pid_file_path]
+        self.paths_to_clean = []
 
     def tearDown(self):
         for path in self.paths_to_clean:
@@ -31,6 +30,18 @@ class ReportUpdaterTest(TestCase):
                     shutil.rmtree(path)
                 except:
                     pass
+
+    def test_get_pidfile_key_norms(self, *_):
+        self.assertEqual(
+            reportupdater.get_pidfile_key("somedir/../query"),
+            reportupdater.get_pidfile_key("query")
+        )
+
+    def test_get_pidfile_key_different(self, *_):
+        self.assertNotEqual(
+            reportupdater.get_pidfile_key("query1"),
+            reportupdater.get_pidfile_key("query2")
+        )
 
     def test_when_two_threads_run_reportupdater_in_parallel(self, *_):
         # Mock database methods.
