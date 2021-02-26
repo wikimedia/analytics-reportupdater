@@ -22,6 +22,7 @@ class Report(object):
         self.start = None
         self.end = None
         self.db_key = None
+        self.hql_template = None
         self.sql_template = None
         self.script = None
         self.explode_by = {}
@@ -41,7 +42,8 @@ class Report(object):
             ' start=' + self.format_date(self.start) +
             ' end=' + self.format_date(self.end) +
             ' db_key=' + str(self.db_key) +
-            ' sql_template=' + self.format_sql(self.sql_template) +
+            ' hql_template=' + self.format_template(self.hql_template) +
+            ' sql_template=' + self.format_template(self.sql_template) +
             ' script=' + str(self.script) +
             ' explode_by=' + str(self.explode_by) +
             ' max_data_points=' + str(self.max_data_points) +
@@ -71,10 +73,10 @@ class Report(object):
             data_lines = 'invalid data'
         return str({'header': header, 'data': data_lines})
 
-    def format_sql(self, to_format):
+    def format_template(self, to_format):
         if to_format is None:
             return str(None)
-        sql = re.sub(r'\s+', ' ', to_format).strip()
-        if len(sql) > 100:
-            sql = sql[0:100] + '...'
-        return sql
+        template = re.sub(r'\s+', ' ', to_format).strip()
+        if len(template) > 100:
+            template = template[0:100] + '...'
+        return template

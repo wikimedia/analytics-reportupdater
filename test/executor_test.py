@@ -40,6 +40,7 @@ class ExecutorTest(TestCase):
         self.report.sql_template = ('SELECT date, value FROM table '
                                     'WHERE date >= {from_timestamp} '
                                     'AND date < {to_timestamp};')
+        self.report.hql_template = 'SELECT {year}, {month} FROM table'
 
     def test_instantiate_sql_when_format_raises_error(self):
         self.report.sql_template = 'SOME sql WITH AN {unknown} placeholder;'
@@ -142,6 +143,22 @@ class ExecutorTest(TestCase):
             return PopenReturnMock()
         with patch('subprocess.Popen', wraps=subprocess_popen_mock):
             success = self.executor.execute_script_report(self.report)
+        self.assertEqual(success, True)
+        self.assertEqual(self.report.results['header'], ['date', 'value'])
+        expected_data = {datetime(2015, 1, 1): [[datetime(2015, 1, 1), '1']]}
+        self.assertEqual(self.report.results['data'], expected_data)
+
+    def test_execute_hive(self):
+        class PopenReturnMock():
+            def communicate(self):
+                return (b'date\tvalue\n2015-01-01\t1', b'stderr_example')
+
+        def subprocess_popen_mock(parameters, **kwargs):
+            self.assertEqual(parameters[-1], 'SELECT 2015, 01 FROM table')
+            return PopenReturnMock()
+        with patch('subprocess.Popen', wraps=subprocess_popen_mock):
+            success = self.executor.execute_hive(self.report)
+
         self.assertEqual(success, True)
         self.assertEqual(self.report.results['header'], ['date', 'value'])
         expected_data = {datetime(2015, 1, 1): [[datetime(2015, 1, 1), '1']]}

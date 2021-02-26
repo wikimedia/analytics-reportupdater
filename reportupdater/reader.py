@@ -66,7 +66,9 @@ class Reader(object):
         executable = self.get_executable(report_config) or report_key
         if report.type == 'sql':
             report.db_key = self.get_db_key(report_config)
-            report.sql_template = self.get_sql_template(executable, query_folder)
+            report.sql_template = self.get_template(executable + '.sql', query_folder)
+        elif report.type == 'hive':
+            report.hql_template = self.get_template(executable + '.hql', query_folder)
         elif report.type == 'script':
             report.script = self.get_script(executable, query_folder)
         report.graphite = self.get_graphite(report_config)
@@ -86,7 +88,7 @@ class Reader(object):
 
     def get_type(self, report_config):
         report_type = self.get_value('type', report_config, 'sql')
-        if report_type not in ['sql', 'script']:
+        if report_type not in ['sql', 'script', 'hive']:
             raise ValueError('Report type is not valid.')
         return report_type
 
@@ -121,13 +123,13 @@ class Reader(object):
             raise ValueError('DB key is not a string.')
         return db_key
 
-    def get_sql_template(self, report_key, query_folder):
-        sql_template_path = os.path.join(query_folder, report_key + '.sql')
+    def get_template(self, report_key, query_folder):
+        template_path = os.path.join(query_folder, report_key)
         try:
-            with io.open(sql_template_path, encoding='utf-8') as sql_template_file:
-                return sql_template_file.read()
+            with io.open(template_path, encoding='utf-8') as template_file:
+                return template_file.read()
         except IOError as e:
-            raise IOError('Could not read the SQL template (' + str(e) + ').')
+            raise IOError('Could not read the template (' + str(e) + ').')
 
     def get_script(self, report_key, query_folder):
         return os.path.join(query_folder, report_key)

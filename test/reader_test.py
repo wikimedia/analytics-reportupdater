@@ -191,20 +191,20 @@ class ReaderTest(TestCase):
         with self.assertRaises(ValueError):
             reader.create_report('reader_test', {})
 
-    def test_get_sql_template_when_query_folder_does_not_exist(self):
+    def test_get_template_when_query_folder_does_not_exist(self):
         with self.assertRaises(IOError):
-            self.reader.get_sql_template('reader_test', 'nonexistent')
+            self.reader.get_template('reader_test', 'nonexistent')
 
-    def test_get_sql_template_when_sql_file_does_not_exist(self):
+    def test_get_template_when_sql_file_does_not_exist(self):
         query_folder = self.config['query_folder']
         with self.assertRaises(IOError):
-            self.reader.get_sql_template('wrong_report_key', query_folder)
+            self.reader.get_template('wrong_report_key', query_folder)
 
-    def test_get_sql_template(self):
-        report_key = 'reader_test'
+    def test_get_template(self):
+        report_key = 'reader_test.sql'
         query_folder = self.config['query_folder']
-        result = self.reader.get_sql_template(report_key, query_folder)
-        sql_template_path = os.path.join(query_folder, report_key + '.sql')
+        result = self.reader.get_template(report_key, query_folder)
+        sql_template_path = os.path.join(query_folder, report_key)
         with io.open(sql_template_path, encoding='utf-8') as sql_template_file:
             expected = sql_template_file.read()
         self.assertEqual(result, expected)
@@ -313,7 +313,7 @@ class ReaderTest(TestCase):
         self.reader.get_first_date = MagicMock(return_value='first_date')
         self.reader.get_granularity = MagicMock(return_value='granularity')
         self.reader.get_db_key = MagicMock(return_value='db_key')
-        self.reader.get_sql_template = MagicMock(return_value='sql_template')
+        self.reader.get_template = MagicMock(return_value='template')
         self.reader.get_explode_by = MagicMock(return_value={})
         report = self.reader.create_report(self.report_key, self.report_config)
         self.assertEqual(report.key, self.report_key)
@@ -321,7 +321,8 @@ class ReaderTest(TestCase):
         self.assertEqual(report.first_date, 'first_date')
         self.assertEqual(report.granularity, 'granularity')
         self.assertEqual(report.db_key, 'db_key')
-        self.assertEqual(report.sql_template, 'sql_template')
+        self.assertEqual(report.hql_template, None)
+        self.assertEqual(report.sql_template, 'template')
         self.assertEqual(report.script, None)
         self.assertEqual(report.explode_by, {})
         self.assertEqual(report.results, {'header': [], 'data': {}})
@@ -333,7 +334,7 @@ class ReaderTest(TestCase):
         self.reader.get_first_date = MagicMock(return_value='first_date')
         self.reader.get_granularity = MagicMock(return_value='granularity')
         self.reader.get_db_key = MagicMock(return_value='db_key')
-        self.reader.get_sql_template = MagicMock(return_value='sql_template')
+        self.reader.get_template = MagicMock(return_value='template')
         self.reader.get_explode_by = MagicMock(return_value={})
         report = self.reader.create_report(self.report_key, self.report_config)
         self.assertEqual(report.key, self.report_key)
@@ -341,6 +342,7 @@ class ReaderTest(TestCase):
         self.assertEqual(report.first_date, 'first_date')
         self.assertEqual(report.granularity, 'granularity')
         self.assertEqual(report.db_key, None)
+        self.assertEqual(report.hql_template, None)
         self.assertEqual(report.sql_template, None)
         self.assertEqual(report.script, 'test/fixtures/queries/reader_test')
         self.assertEqual(report.explode_by, {})

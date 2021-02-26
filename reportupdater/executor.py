@@ -37,6 +37,9 @@ class Executor(object):
             elif report.type == 'script':
                 if self.execute_script_report(report):
                     yield report
+            elif report.type == 'hive':
+                if self.execute_hive(report):
+                    yield report
 
     def execute_sql_report(self, report):
         # Get connection key to allow for connection caching,
@@ -108,6 +111,33 @@ class Executor(object):
         finally:
             cursor.close()
         return header, data
+
+    def execute_hive(self, report):
+        values = {
+            'from_timestamp': report.start.strftime(TIMESTAMP_FORMAT),
+            'year': report.start.strftime('%Y'),
+            'month': report.start.strftime('%m'),
+            'day': report.start.strftime('%d'),
+            'to_timestamp': report.end.strftime(TIMESTAMP_FORMAT)
+        }
+        values.update(report.explode_by)
+        # Prepare command line for the call
+        command = [
+            'hive',
+            '-e', report.hql_template.format(**values)
+        ]
+        try:
+            # Execute the script, parse the results and normalize them.
+            process = subprocess.Popen(command, stdout=subprocess.PIPE)
+            stdout, _ = process.communicate()
+            tsv_reader = csv.reader(stdout.decode().splitlines(), delimiter='\t')
+            report.results = self.normalize_results(report, None, tsv_reader)
+        except Exception as e:
+            message = ('Report "{report_key}" could not be executed '
+                       'because of error: {error}')
+            logging.exception(message.format(report_key=report.key, error=str(e)))
+            return False
+        return True
 
     def execute_script_report(self, report):
         # prepare parameters for the call
