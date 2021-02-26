@@ -138,7 +138,7 @@ class Executor(object):
 
     def normalize_results(self, report, header, data):
         normalized_header = copy(header)
-        normalized_data = defaultdict(list) if report.is_funnel else {}
+        normalized_data = defaultdict(list)
 
         for row in data:
             # If the header was not explicitly passed, use the first row.
@@ -161,14 +161,11 @@ class Executor(object):
 
             # Build the normalized data.
             normalized_row = [normalized_date] + list(row[1:])
-            if report.is_funnel:
-                normalized_data[normalized_date].append(normalized_row)
-            else:
-                normalized_data[normalized_date] = normalized_row
+            normalized_data[normalized_date].append(normalized_row)
 
         # If there's no data, store a row with null values to avoid recomputation.
         if len(normalized_data) == 0:
             empty_row = [report.start] + [None] * (len(normalized_header) - 1)
-            normalized_data[report.start] = [empty_row] if report.is_funnel else empty_row
+            normalized_data[report.start] = [empty_row]
 
         return {'header': normalized_header, 'data': normalized_data}

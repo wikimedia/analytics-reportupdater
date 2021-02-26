@@ -144,7 +144,7 @@ class ExecutorTest(TestCase):
             success = self.executor.execute_script_report(self.report)
         self.assertEqual(success, True)
         self.assertEqual(self.report.results['header'], ['date', 'value'])
-        expected_data = {datetime(2015, 1, 1): [datetime(2015, 1, 1), '1']}
+        expected_data = {datetime(2015, 1, 1): [[datetime(2015, 1, 1), '1']]}
         self.assertEqual(self.report.results['data'], expected_data)
 
     def test_normalize_results_when_header_is_not_set(self):
@@ -153,7 +153,7 @@ class ExecutorTest(TestCase):
         expected = {
             'header': ['date', 'col1', 'col2'],
             'data': {
-                datetime(2016, 1, 1): [datetime(2016, 1, 1), 1, 2]
+                datetime(2016, 1, 1): [[datetime(2016, 1, 1), 1, 2]]
             }
         }
         self.assertEqual(results, expected)
@@ -174,7 +174,7 @@ class ExecutorTest(TestCase):
         expected = {
             'header': ['date', 'col1', 'col2'],
             'data': {
-                datetime(2015, 1, 1): [datetime(2015, 1, 1), None, None]
+                datetime(2015, 1, 1): [[datetime(2015, 1, 1), None, None]]
             }
         }
         self.assertEqual(results, expected)
@@ -188,7 +188,6 @@ class ExecutorTest(TestCase):
             [date(2015, 1, 2), '4'],
             [date(2015, 1, 2), '5']
         ]
-        self.report.is_funnel = True
         results = self.executor.normalize_results(self.report, header, data)
         expected = {
             'header': ['date', 'val'],
@@ -220,6 +219,6 @@ class ExecutorTest(TestCase):
         report = executed[0]
         expected = {
             'header': ['some', 'sql', 'header'],
-            'data': {datetime(2015, 1, 1): [datetime(2015, 1, 1), 'some', 'value']}
+            'data': {datetime(2015, 1, 1): [[datetime(2015, 1, 1), 'some', 'value']]}
         }
         self.assertEqual(report.results, expected)

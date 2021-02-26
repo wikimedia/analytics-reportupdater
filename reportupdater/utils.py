@@ -41,14 +41,10 @@ def get_previous_results(report, output_folder, reruns):
         except IOError as e:
             raise IOError('Could not read the output file (' + str(e) + ').')
         header = []
-        if report.is_funnel:
-            # If the report is for a funnel visualization,
-            # one same date may contain several lines in the tsv.
-            # So, all lines for the same date, are listed in the
-            # same dict entry under the date key.
-            data = defaultdict(list)
-        else:
-            data = {}
+        # One date may contain several lines in the tsv.
+        # So, all lines for the same date, are listed in the
+        # same dict entry under the date key.
+        data = defaultdict(list)
         for row in rows:
             if not header:
                 header = row  # skip header
@@ -60,10 +56,7 @@ def get_previous_results(report, output_folder, reruns):
                 if needs_rerun(date, reruns.get(report.key, None)):
                     continue  # Do not list this date so that it is re-run.
                 row[0] = date
-                if report.is_funnel:
-                    data[date].append(row)
-                else:
-                    data[date] = row
+                data[date].append(row)
         previous_results['header'] = header
         previous_results['data'] = data
     return previous_results

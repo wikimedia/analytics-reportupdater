@@ -9,5 +9,4 @@ defaults:
 reports:
     reportupdater_test3:
         granularity: days
-        funnel: true
         starts: 2015-01-01

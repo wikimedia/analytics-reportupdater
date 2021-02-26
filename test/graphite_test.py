@@ -44,8 +44,8 @@ class GraphiteTest(TestCase):
         self.report.results = {
             'header': ['date', 'val1', 'val2', 'val3'],
             'data': {
-                datetime(2015, 1, 2): [datetime(2015, 1, 2), 1, 2, 3],
-                datetime(2015, 1, 3): [datetime(2015, 1, 3), 1, 2, 3],
+                datetime(2015, 1, 2): [[datetime(2015, 1, 2), 1, 2, 3]],
+                datetime(2015, 1, 3): [[datetime(2015, 1, 3), 1, 2, 3]],
             }
         }
 
@@ -94,8 +94,8 @@ class GraphiteSocketTest(TestCase):
         report.results = {
             'header': ['date', 'val1', 'val2', 'val3'],
             'data': {
-                datetime(2015, 1, 2): [datetime(2015, 1, 2), 1, 2, 3],
-                datetime(2015, 1, 3): [datetime(2015, 1, 3), 1, 2, 3],
+                datetime(2015, 1, 2): [[datetime(2015, 1, 2), 1, 2, 3]],
+                datetime(2015, 1, 3): [[datetime(2015, 1, 3), 1, 2, 3]],
             }
         }
 

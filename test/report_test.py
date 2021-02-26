@@ -12,7 +12,6 @@ class ReportTest(TestCase):
         self.report.type = 'sql'
         self.report.granularity = 'days'
         self.report.lag = 0
-        self.report.is_funnel = True
         self.report.first_date = datetime(2015, 1, 1)
         self.report.start = datetime(2015, 1, 2)
         self.report.end = datetime(2015, 1, 3)

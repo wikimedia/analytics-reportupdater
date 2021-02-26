@@ -18,7 +18,6 @@ class Report(object):
         self.type = None
         self.granularity = None
         self.lag = 0
-        self.is_funnel = False
         self.first_date = None
         self.start = None
         self.end = None
@@ -38,7 +37,6 @@ class Report(object):
             ' type=' + str(self.type) +
             ' granularity=' + str(self.granularity) +
             ' lag=' + str(self.lag) +
-            ' is_funnel=' + str(self.is_funnel) +
             ' first_date=' + self.format_date(self.first_date) +
             ' start=' + self.format_date(self.start) +
             ' end=' + self.format_date(self.end) +

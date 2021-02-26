@@ -31,7 +31,7 @@ class WriterTest(TestCase):
         self.report.results = {
             'header': ['date', 'value'],
             'data': {
-                datetime(2015, 1, 1): [datetime(2015, 1, 1), '1']
+                datetime(2015, 1, 1): [[datetime(2015, 1, 1), '1']]
             }
         }
 
@@ -83,7 +83,6 @@ class WriterTest(TestCase):
         self.assertEqual(output, 'date\tvalue')
 
     def test_write_results_with_funnel_data(self):
-        self.report.is_funnel = True
         header = ['date', 'value']
         data = {
             datetime(2015, 1, 2): [[datetime(2015, 1, 2), 'c'], [datetime(2015, 1, 2), 'd']],
@@ -110,7 +109,7 @@ class WriterTest(TestCase):
             'editor': 'visualeditor'
         }
         header = ['date', 'value']
-        data = {datetime(2015, 1, 1): [datetime(2015, 1, 1), 'a']}
+        data = {datetime(2015, 1, 1): [[datetime(2015, 1, 1), 'a']]}
         self.writer.write_results(header, data, self.report, self.config['output_folder'])
         output_folder = 'test/fixtures/output/writer_test'
         self.paths_to_clean.append(output_folder)
@@ -124,9 +123,9 @@ class WriterTest(TestCase):
     def test_write_results(self):
         header = ['date', 'value']
         data = {
-            datetime(2015, 1, 2): [datetime(2015, 1, 2), 'a'],
-            datetime(2015, 1, 3): [datetime(2015, 1, 3), 'b'],
-            datetime(2015, 1, 1): [datetime(2015, 1, 1), 'c']
+            datetime(2015, 1, 2): [[datetime(2015, 1, 2), 'a']],
+            datetime(2015, 1, 3): [[datetime(2015, 1, 3), 'b']],
+            datetime(2015, 1, 1): [[datetime(2015, 1, 1), 'c']]
         }
         output_folder = self.config['output_folder']
         self.writer.write_results(header, data, self.report, output_folder)
@@ -172,12 +171,12 @@ class WriterTest(TestCase):
         new_row = [datetime(2015, 1, 2), 1, 8, 2, 3, 9]
         self.report.results = {
             'header': new_header,
-            'data': {new_date: new_row}
+            'data': {new_date: [new_row]}
         }
         header, updated_data, new_dates = self.writer.update_results(self.report)
         self.assertEqual(header, new_header)
-        self.assertEqual(updated_data[new_date], new_row)
-        self.assertEqual(updated_data[old_date], [old_date, '1', None, '2', '3', None])
+        self.assertEqual(updated_data[new_date], [new_row])
+        self.assertEqual(updated_data[old_date], [[old_date, '1', None, '2', '3', None]])
         self.assertEqual(new_dates, [new_date])
 
     def test_update_results_when_header_has_moved_columns(self):
@@ -189,12 +188,12 @@ class WriterTest(TestCase):
         new_row = [datetime(2015, 1, 2), 1, 2, 3]
         self.report.results = {
             'header': new_header,
-            'data': {new_date: new_row}
+            'data': {new_date: [new_row]}
         }
         header, updated_data, new_dates = self.writer.update_results(self.report)
         self.assertEqual(header, new_header)
-        self.assertEqual(updated_data[new_date], new_row)
-        self.assertEqual(updated_data[old_date], [old_date, '2', '1', '3'])
+        self.assertEqual(updated_data[new_date], [new_row])
+        self.assertEqual(updated_data[old_date], [[old_date, '2', '1', '3']])
         self.assertEqual(new_dates, [new_date])
 
     def test_update_results_when_header_has_removed_columns(self):
@@ -205,11 +204,11 @@ class WriterTest(TestCase):
         new_row = [datetime(2015, 1, 2), 1, 3]
         self.report.results = {
             'header': new_header,
-            'data': {new_date: new_row}
+            'data': {new_date: [new_row]}
         }
         header, updated_data, new_dates = self.writer.update_results(self.report)
         self.assertEqual(header, ['date', 'val1', 'val3', 'val2'])
-        self.assertEqual(updated_data[new_date], [datetime(2015, 1, 2), 1, 3, None])
+        self.assertEqual(updated_data[new_date], [[datetime(2015, 1, 2), 1, 3, None]])
         self.assertEqual(new_dates, [new_date])
 
     def test_update_results_when_header_has_different_number_of_columns(self):
@@ -220,7 +219,7 @@ class WriterTest(TestCase):
         new_row = [datetime(2015, 1, 2), 1, 2, 3, 'Additional']
         self.report.results = {
             'header': new_header,
-            'data': {new_date: new_row}
+            'data': {new_date: [new_row]}
         }
         with self.assertRaises(ValueError):
             self.writer.update_results(self.report)
@@ -234,12 +233,12 @@ class WriterTest(TestCase):
         new_row = [datetime(2015, 1, 2), 2, 8, 1, 3, 9]
         self.report.results = {
             'header': new_header,
-            'data': {new_date: new_row}
+            'data': {new_date: [new_row]}
         }
         header, updated_data, new_dates = self.writer.update_results(self.report)
         self.assertEqual(header, new_header)
-        self.assertEqual(updated_data[new_date], new_row)
-        self.assertEqual(updated_data[old_date], [old_date, '2', None, '1', '3', None])
+        self.assertEqual(updated_data[new_date], [new_row])
+        self.assertEqual(updated_data[old_date], [[old_date, '2', None, '1', '3', None]])
         self.assertEqual(new_dates, [new_date])
 
     def test_update_results_when_max_data_points_is_set(self):
@@ -252,12 +251,12 @@ class WriterTest(TestCase):
         self.report.start = new_date
         self.report.results = {
             'header': ['date', 'val1', 'val2', 'val3'],  # no changes
-            'data': {new_date: new_row}
+            'data': {new_date: [new_row]}
         }
         header, updated_data, new_dates = self.writer.update_results(self.report)
         self.assertEqual(len(updated_data), 1)
         self.assertTrue(new_date in updated_data)
-        self.assertEqual(updated_data[new_date], new_row)
+        self.assertEqual(updated_data[new_date], [new_row])
         self.assertEqual(new_dates, [new_date])
 
     def test_update_results_computes_new_dates_without_reruns(self):
@@ -272,8 +271,8 @@ class WriterTest(TestCase):
         self.report.results = {
             'header': ['date', 'val1', 'val2', 'val3'],  # no changes
             'data': {
-                new_date_1: new_row_1,
-                new_date_2: new_row_2
+                new_date_1: [new_row_1],
+                new_date_2: [new_row_2]
             }
         }
         header, updated_data, new_dates = self.writer.update_results(self.report)
@@ -322,9 +321,9 @@ class WriterTest(TestCase):
         # Set up current results.
         self.report.results['header'] = ['date', 'value']
         self.report.results['data'] = {
-            datetime(2015, 1, 1): [datetime(2015, 1, 1), 'a'],
-            datetime(2015, 1, 2): [datetime(2015, 1, 2), 'b'],
-            datetime(2015, 1, 3): [datetime(2015, 1, 3), 'c']
+            datetime(2015, 1, 1): [[datetime(2015, 1, 1), 'a']],
+            datetime(2015, 1, 2): [[datetime(2015, 1, 2), 'b']],
+            datetime(2015, 1, 3): [[datetime(2015, 1, 3), 'c']]
         }
         executed = [self.report]
         self.writer.executor.run = MagicMock(return_value=executed)

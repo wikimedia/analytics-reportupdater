@@ -59,7 +59,6 @@ class Reader(object):
         report.type = self.get_type(report_config)
         report.granularity = self.get_granularity(report_config)
         report.lag = self.get_lag(report_config)
-        report.is_funnel = self.get_is_funnel(report_config)
         report.first_date = self.get_first_date(report_config)
         report.explode_by = self.get_explode_by(report_config, query_folder)
         report.max_data_points = self.get_max_data_points(report_config)
@@ -102,9 +101,6 @@ class Reader(object):
         if type(lag) != int or lag < 0:
             raise ValueError('Report lag is not valid.')
         return lag
-
-    def get_is_funnel(self, report_config):
-        return self.get_value('funnel', report_config, False)
 
     def get_first_date(self, report_config):
         first_date = self.get_value('starts', report_config, NoDefaultValue())

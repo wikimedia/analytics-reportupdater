@@ -62,7 +62,7 @@ class Writer(object):
         current_header = copy(report.results['header'])
         current_data = deepcopy(report.results['data'])
         for date in current_data:
-            rows = current_data[date] if report.is_funnel else [current_data[date]]
+            rows = current_data[date]
             for row in rows:
                 if len(row) != len(current_header):
                     raise ValueError('Results and header do not match.')
@@ -90,7 +90,7 @@ class Writer(object):
             if removed_columns:
                 current_header.extend(removed_columns)
                 for date in current_data:
-                    rows = current_data[date] if report.is_funnel else [current_data[date]]
+                    rows = current_data[date]
                     for row in rows:
                         row.extend([None] * len(removed_columns))
 
@@ -102,14 +102,14 @@ class Writer(object):
 
             # Rewrite previous data in the new order and including new columns.
             for date in previous_data:
-                rows = previous_data[date] if report.is_funnel else [previous_data[date]]
+                rows = previous_data[date]
                 rewritten_rows = []
                 for row in rows:
                     rewritten_row = [None] * len(current_header)
                     for new_index, old_index in column_map:
                         rewritten_row[new_index] = row[old_index]
                     rewritten_rows.append(rewritten_row)
-                previous_data[date] = rewritten_rows if report.is_funnel else rewritten_rows[0]
+                previous_data[date] = rewritten_rows
 
         # Build final updated data.
         updated_header = current_header
@@ -125,8 +125,7 @@ class Writer(object):
     def write_results(self, header, data, report, output_folder):
         dates = sorted(data.keys())
         rows = [data[date] for date in dates]
-        if report.is_funnel:
-            rows = [row for sublist in rows for row in sublist]  # flatten
+        rows = [row for sublist in rows for row in sublist]  # flatten
         if len(report.explode_by) > 0:
             output_path = get_exploded_report_output_path(
                 output_folder, report.explode_by, report.key)
@@ -179,7 +178,6 @@ class Writer(object):
         data = report.results['data']
         dates = sorted(dates_to_send)
         rows = [data[date] for date in dates]
-        if report.is_funnel:
-            rows = [row for sublist in rows for row in sublist]  # flatten
+        rows = [row for sublist in rows for row in sublist]  # flatten
         for row in rows:
             self.graphite.record_row(row, report)

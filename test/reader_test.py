@@ -115,22 +115,6 @@ class ReaderTest(TestCase):
         result = self.reader.get_lag(report_config)
         self.assertEqual(result, 10)
 
-    def test_get_is_funnel_when_report_funnel_is_not_in_config(self):
-        report_config = {}
-        is_funnel = self.reader.get_is_funnel(report_config)
-        self.assertFalse(is_funnel)
-
-    def test_get_is_funnel_when_report_funnel_is_not_true(self):
-        for value in [False, None, 0]:
-            report_config = {'funnel': value}
-            is_funnel = self.reader.get_is_funnel(report_config)
-            self.assertFalse(is_funnel)
-
-    def test_get_is_funnel_when_report_funnel_is_true(self):
-        report_config = {'funnel': True}
-        is_funnel = self.reader.get_is_funnel(report_config)
-        self.assertTrue(is_funnel)
-
     def test_get_first_date_when_report_starts_is_not_a_string(self):
         report_config = {'starts': ('not', 'a', 'string')}
         with self.assertRaises(TypeError):
@@ -328,7 +312,6 @@ class ReaderTest(TestCase):
         self.reader.get_type = MagicMock(return_value='sql')
         self.reader.get_first_date = MagicMock(return_value='first_date')
         self.reader.get_granularity = MagicMock(return_value='granularity')
-        self.reader.get_is_funnel = MagicMock(return_value='is_funnel')
         self.reader.get_db_key = MagicMock(return_value='db_key')
         self.reader.get_sql_template = MagicMock(return_value='sql_template')
         self.reader.get_explode_by = MagicMock(return_value={})
@@ -337,7 +320,6 @@ class ReaderTest(TestCase):
         self.assertEqual(report.type, 'sql')
         self.assertEqual(report.first_date, 'first_date')
         self.assertEqual(report.granularity, 'granularity')
-        self.assertEqual(report.is_funnel, 'is_funnel')
         self.assertEqual(report.db_key, 'db_key')
         self.assertEqual(report.sql_template, 'sql_template')
         self.assertEqual(report.script, None)
@@ -350,7 +332,6 @@ class ReaderTest(TestCase):
         self.reader.get_type = MagicMock(return_value='script')
         self.reader.get_first_date = MagicMock(return_value='first_date')
         self.reader.get_granularity = MagicMock(return_value='granularity')
-        self.reader.get_is_funnel = MagicMock(return_value='is_funnel')
         self.reader.get_db_key = MagicMock(return_value='db_key')
         self.reader.get_sql_template = MagicMock(return_value='sql_template')
         self.reader.get_explode_by = MagicMock(return_value={})
@@ -359,7 +340,6 @@ class ReaderTest(TestCase):
         self.assertEqual(report.type, 'script')
         self.assertEqual(report.first_date, 'first_date')
         self.assertEqual(report.granularity, 'granularity')
-        self.assertEqual(report.is_funnel, 'is_funnel')
         self.assertEqual(report.db_key, None)
         self.assertEqual(report.sql_template, None)
         self.assertEqual(report.script, 'test/fixtures/queries/reader_test')
