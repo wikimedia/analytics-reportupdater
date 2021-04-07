@@ -114,11 +114,11 @@ class Executor(object):
 
     def execute_hive(self, report):
         values = {
-            'from_timestamp': report.start.strftime(TIMESTAMP_FORMAT),
+            'from_date': report.start.strftime(DATE_FORMAT),
             'year': report.start.strftime('%Y'),
             'month': report.start.strftime('%m'),
             'day': report.start.strftime('%d'),
-            'to_timestamp': report.end.strftime(TIMESTAMP_FORMAT)
+            'to_date': report.end.strftime(DATE_FORMAT)
         }
         values.update(report.explode_by)
         # Prepare command line for the call
