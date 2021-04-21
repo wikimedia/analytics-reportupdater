@@ -48,7 +48,7 @@ def run(**kwargs):
             reader = Reader(config)
             selector = Selector(reader, config)
             executor = Executor(selector, config)
-            writer = Writer(executor, config, configure_graphite(config))
+            writer = Writer(executor, config, configure_graphite(config, params))
             writer.run()
 
             delete_reruns(rerun_files)  # delete rerun files that have been processed
@@ -142,9 +142,9 @@ def delete_reruns(rerun_files):
             logging.warning('Rerun file %s could not be deleted.' % rerun_file)
 
 
-def configure_graphite(config):
+def configure_graphite(config, params):
     graphite = None
-    if 'graphite' in config:
+    if 'graphite' in config and not params.get('no_graphite'):
         # load any lookup dictionaries that Graphite metrics can use
         for key, lookup in list(config['graphite'].get('lookups', {}).items()):
             path = os.path.join(config['query_folder'], lookup)

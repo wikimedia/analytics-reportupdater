@@ -24,6 +24,9 @@ def main():
                         help='Folder to write the TSV files to.')
     parser.add_argument('--config-path',
                         help='Yaml configuration file. Default: <query_folder>/config.yaml.')
+    parser.add_argument('--no-graphite',
+                        action='store_true',
+                        help='Deactivate posting metrics to graphite.')
     parser.add_argument('-l', '--log-level',
                         help='(debug|info|warning|error|critical)')
     args = vars(parser.parse_args())

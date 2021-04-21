@@ -20,7 +20,7 @@ class GraphiteTest(TestCase):
         self.config['output_folder'] = 'test/fixtures/output'
         self.config['reruns'] = {}
 
-        self.graphite = configure_graphite(self.config)
+        self.graphite = configure_graphite(self.config, {})
         self.graphite.record = MagicMock()
 
         reader = Reader(self.config)
@@ -29,7 +29,7 @@ class GraphiteTest(TestCase):
         self.writer = Writer(executor, self.config, self.graphite)
 
     def tearDown(self):
-        shutil.rmtree('test/fixtures/output/graphite_test1')
+        shutil.rmtree('test/fixtures/output/graphite_test1', ignore_errors=True)
 
     def test_send_new_dates_to_graphite(self):
         self.report = Report()
@@ -61,6 +61,11 @@ class GraphiteTest(TestCase):
             call('metric_name_two.en.wiki.wikitext', 3, expected_date2),
         ], any_order=True)
 
+    def test_no_graphite_flag(self):
+        params = {'no_graphite': True}
+        graphite = configure_graphite(self.config, params)
+        self.assertIsNone(graphite)
+
 
 class GraphiteSocketTest(TestCase):
 
@@ -70,7 +75,7 @@ class GraphiteSocketTest(TestCase):
         self.config['output_folder'] = 'test/fixtures/output'
         self.config['reruns'] = {}
 
-        self.graphite = configure_graphite(self.config)
+        self.graphite = configure_graphite(self.config, {})
 
         reader = Reader(self.config)
         selector = Selector(reader, self.config)
