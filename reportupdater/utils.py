@@ -118,7 +118,7 @@ def get_mediawiki_host_and_port(db_config, db_name):
     elif db_name == 'centralauth':
         # The 'centralauth' db is a special case, not currently
         # listed among the mediawiki-config's dblists. The more automated
-        # solution would be to parse db-eqiad.php in mediawiki-config, but it
+        # solution would be to parse db-production.php in mediawiki-config, but it
         # would add more complexity than what's necessary.
         shard = 's7'
     elif use_x1:
