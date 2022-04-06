@@ -3,9 +3,9 @@ the following procedure. Have in mind that you still need ssh access to the
 datastores, testing locally is just a convenience.
 
 1. Clone the reportupdater query repository that you want to test, like:
-limn-language-data, limn-multimedia-data, limn-mobile-data, etc. Look at the
-`config.yaml` file to get the database host the queries connect to. Possible
-values are: s1-analytics-slave.eqiad.wmnet, analytics-store.eqiad.wmnet, etc.
+limn-language-data, limn-mobile-data, etc. Look at the `config.yaml` file to
+get the database host the queries connect to. Possible values are:
+s1-analytics-slave.eqiad.wmnet, analytics-store.eqiad.wmnet, etc.
 
 2. Create an ssh tunnel to that host using the script `ssh` in this directory.
 Edit the script if necessary to replace the host you want to connect to.
