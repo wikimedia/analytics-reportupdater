@@ -2,5 +2,5 @@ pid==3.0.4
 python-dateutil==2.2
 pymysql==0.6.2
 PyYAML>=3.10
-Jinja2==2.6
+Jinja2==2.7
 dnspython==1.16.0
