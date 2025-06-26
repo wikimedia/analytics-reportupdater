@@ -1,5 +1,0 @@
-reports:
-    reportupdater_test5:
-        granularity: days
-        starts: 2015-01-01
-        type: script
